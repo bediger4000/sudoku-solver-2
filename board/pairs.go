@@ -212,22 +212,6 @@ func (bd *Board) BlockNakedPairs(announce bool) int {
 						totalEliminated += spliced
 					}
 				}
-
-				// found 2 cells in block blockNo with matching pairs,
-				// if they are in a row, or a column,
-				// eliminate pairMarker.a and pairMarker.b from rest of that col or row
-				if cellArray[0].row == cellArray[1].row {
-					if announce {
-						fmt.Printf("found naked pair (%d,%d) in block %d, and row %d\n",
-							cellArray[0].a, cellArray[0].b, blockNo, cellArray[0].row)
-					}
-				}
-				if cellArray[0].col == cellArray[1].col {
-					if announce {
-						fmt.Printf("found naked pair (%d,%d) in block %d, and col %d\n",
-							cellArray[0].a, cellArray[0].b, blockNo, cellArray[0].col)
-					}
-				}
 			}
 		}
 	}
@@ -235,6 +219,11 @@ func (bd *Board) BlockNakedPairs(announce bool) int {
 }
 
 func (bd *Board) HiddenPairEliminate(announce bool) int {
+	// If these calls find hidden pairs in a row, block or col,
+	// the next iteration on solution methods in main() will
+	// run NakedPairEliminate() which will eliminate any of the
+	// pairs' values from appropriate row/block/col. No need to
+	// do that elimination in these functions.
 	candidatesEliminated := bd.RowHiddenPairs(announce)
 	candidatesEliminated += bd.ColHiddenPairs(announce)
 	candidatesEliminated += bd.BlockHiddenPairs(announce)
