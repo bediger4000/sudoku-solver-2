@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+	var validateOnly bool
 	var printPossible bool
 	var printPossiblePS bool
 	var printIntermediate bool
@@ -16,6 +17,7 @@ func main() {
 	var announceSolutions bool
 	var nakedPairElimination bool
 	var hiddenPairElimination bool
+	flag.BoolVar(&validateOnly, "v", false, "validate input board only")
 	flag.BoolVar(&printPossible, "c", false, "on incomplete solution, print digit possibilities")
 	flag.BoolVar(&printPossiblePS, "C", false, "print digit possibilities in PostScript output")
 	flag.BoolVar(&printIntermediate, "i", false, "print intermediate solved boards")
@@ -37,12 +39,20 @@ func main() {
 	}
 	bd := board.ReadBoard(fin)
 
+	if validateOnly {
+		if !bd.Valid() {
+			return
+		}
+		fmt.Printf("Valid input board\n")
+		return
+	}
+
 	if *postScriptFileName != "" {
 		fout, err := os.Create(*postScriptFileName)
 		if err != nil {
 			log.Fatal(err)
 		}
-		(&bd).EmitPostScript(fout, printPossiblePS)
+		(&bd).EmitPostScript(fout, *postScriptFileName, printPossiblePS)
 		return
 	}
 
