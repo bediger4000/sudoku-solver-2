@@ -17,6 +17,7 @@ func main() {
 	var announceSolutions bool
 	var nakedPairElimination bool
 	var hiddenPairElimination bool
+	var pointingElimination bool
 	flag.BoolVar(&validateOnly, "v", false, "validate input board only")
 	flag.BoolVar(&printPossible, "c", false, "on incomplete solution, print digit possibilities")
 	flag.BoolVar(&printPossiblePS, "C", false, "print digit possibilities in PostScript output")
@@ -108,6 +109,12 @@ func main() {
 		if hiddenPairElimination {
 			m = (&bd).HiddenPairEliminate(announceSolutions)
 			fmt.Printf("Eliminated %d candidates via hidden pairs\n", m)
+			n += m
+		}
+
+		if pointingElimination {
+			m = (&bd).PointingElimination(announceSolutions)
+			fmt.Printf("Eliminated %d candidates via pointing\n", m)
 			n += m
 		}
 
