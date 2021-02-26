@@ -26,6 +26,7 @@ func main() {
 	flag.BoolVar(&announceSolutions, "a", false, "announce solution digits")
 	flag.BoolVar(&nakedPairElimination, "N", false, "perform naked pair elimination")
 	flag.BoolVar(&hiddenPairElimination, "H", false, "perform hidden pair elimination")
+	flag.BoolVar(&pointingElimination, "P", false, "perform block pointing elimination")
 	postScriptFileName := flag.String("p", "", "PostScript output in this file")
 	flag.Parse()
 
@@ -112,10 +113,16 @@ func main() {
 			n += m
 		}
 
-		if pointingElimination {
+		if n == 0 && pointingElimination {
+			fmt.Println("--- before pointing ---")
+			bd.PrintAsInput(os.Stdout)
+			fmt.Println("--- before pointing ---")
 			m = (&bd).PointingElimination(announceSolutions)
 			fmt.Printf("Eliminated %d candidates via pointing\n", m)
 			n += m
+			fmt.Println("--- after pointing ---")
+			bd.PrintAsInput(os.Stdout)
+			fmt.Println("--- after pointing ---")
 		}
 
 		if !(&bd).Valid() {
