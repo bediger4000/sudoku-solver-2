@@ -18,6 +18,8 @@ func main() {
 	var nakedPairElimination bool
 	var hiddenPairElimination bool
 	var pointingElimination bool
+	var finalOutput bool
+	flag.BoolVar(&finalOutput, "f", false, "print final board in PostScript")
 	flag.BoolVar(&validateOnly, "v", false, "validate input board only")
 	flag.BoolVar(&printPossible, "c", false, "on incomplete solution, print digit possibilities")
 	flag.BoolVar(&printPossiblePS, "C", false, "print digit possibilities in PostScript output")
@@ -49,7 +51,7 @@ func main() {
 		return
 	}
 
-	if *postScriptFileName != "" {
+	if !finalOutput && *postScriptFileName != "" {
 		fout, err := os.Create(*postScriptFileName)
 		if err != nil {
 			log.Fatal(err)
@@ -128,6 +130,15 @@ func main() {
 		if !(&bd).Valid() {
 			break
 		}
+	}
+
+	if finalOutput && *postScriptFileName != "" {
+		fout, err := os.Create(*postScriptFileName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		(&bd).EmitPostScript(fout, *postScriptFileName, printPossiblePS)
+		return
 	}
 
 	if printAsInput {
