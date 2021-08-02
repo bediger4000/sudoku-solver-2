@@ -93,3 +93,17 @@ func (bd *Board) Valid() bool {
 	}
 	return true
 }
+
+// Finished returns true if the board is filled in,
+// false otherwise. Makes no judgement of the validity
+// of the filled-in numbers.
+func (bd *Board) Finished() bool {
+	for colNo := 0; colNo < 9; colNo++ {
+		for rowNo := 0; rowNo < 9; rowNo++ {
+			if !bd[rowNo][colNo].Solved {
+				return false
+			}
+		}
+	}
+	return true
+}
