@@ -1,6 +1,12 @@
 package board
 
+import "os"
+
 func BackTrackSolution(bd *Board) {
+	solution, foundit := backTrackSolution(*bd)
+	if foundit {
+		solution.Print(os.Stdout)
+	}
 }
 
 func backTrackSolution(bd Board) (Board, bool) {
@@ -13,19 +19,22 @@ func backTrackSolution(bd Board) (Board, bool) {
 					bd[rowNo][colNo].Solved = true
 
 					// erase all possibilities this affects
+					erasures := (&bd).erasePossibilities(rowNo, colNo, bd[rowNo][colNo].Block, digit)
 
-					// check to see if this is a solution
-					if bd.Valid() && bd.Finished() {
-						return bd, true
+					if len(erasures) > 0 {
+						// check to see if this is a solution
+						if valid, complete := (&bd).ValidAndComplete(); complete {
+							return bd, valid
+						}
+
+						// recurse
+						if solvedBd, solution := backTrackSolution(bd); solution {
+							return solvedBd, true
+						}
+
+						// reset all the erased possibilities
+						(&bd).replaceEliminations(erasures)
 					}
-
-					// recurse
-					solvedBd, solution := backTrackSolution()
-					if solution {
-						return solvedBd, true
-					}
-
-					// reset all the erased possibilities
 
 					// reset bd[][].Value
 					bd[rowNo][colNo].Value = 0
@@ -37,8 +46,19 @@ func backTrackSolution(bd Board) (Board, bool) {
 	return bd, false
 }
 
+func (bd *Board) replaceEliminations(eliminations [][3]int) {
+	for idx := range eliminations {
+		row, col, digit := eliminations[idx][0], eliminations[idx][1], eliminations[idx][2]
+		bd[row][col].Possible = append(bd[row][col].Possible, digit)
+	}
+}
+
+// erasePossibilities erases all instances of digitEliminate
+// from other squares in rowEliminate, colEliminate and blockEliminate,
+// returning a slice of [3]int: {row, col, digit}, each representing
+// an erased digit in square [row][col]
 func (bd *Board) erasePossibilities(rowEliminate, colEliminate, blockEliminate, digitEliminate int) [][3]int {
-	eliminations := make([][3]int)
+	eliminations := make([][3]int, 0)
 	for col := 0; col < 9; col++ {
 		if bd[rowEliminate][col].Solved {
 			continue
