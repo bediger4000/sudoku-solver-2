@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sudoku/board"
+	"sudoku2/board"
 )
 
 func main() {
