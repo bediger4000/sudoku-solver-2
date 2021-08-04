@@ -1,49 +1,126 @@
 package board
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
-func BackTrackSolution(bd *Board) {
-	solution, foundit := backTrackSolution(*bd)
-	if foundit {
-		solution.Print(os.Stdout)
-	}
-}
-
-func backTrackSolution(bd Board) (Board, bool) {
+func (bd *Board) printPly(ply int, phrase string) {
+	fmt.Printf("ply %d: %s\n", ply, phrase)
+	bd.Print(os.Stdout)
+	openCount := 0
 	for rowNo := 0; rowNo < 9; rowNo++ {
 		for colNo := 0; colNo < 9; colNo++ {
 			if !bd[rowNo][colNo].Solved {
-				for _, digit := range bd[rowNo][colNo].Possible {
-					// set digit as bd[][].Value
-					bd[rowNo][colNo].Value = digit
-					bd[rowNo][colNo].Solved = true
-
-					// erase all possibilities this affects
-					erasures := (&bd).erasePossibilities(rowNo, colNo, bd[rowNo][colNo].Block, digit)
-
-					if len(erasures) > 0 {
-						// check to see if this is a solution
-						if valid, complete := (&bd).ValidAndComplete(); complete {
-							return bd, valid
-						}
-
-						// recurse
-						if solvedBd, solution := backTrackSolution(bd); solution {
-							return solvedBd, true
-						}
-
-						// reset all the erased possibilities
-						(&bd).replaceEliminations(erasures)
-					}
-
-					// reset bd[][].Value
-					bd[rowNo][colNo].Value = 0
-					bd[rowNo][colNo].Solved = false
-				}
+				fmt.Printf("  <%d,%d> can hold %v\n", rowNo, colNo, bd[rowNo][colNo].Possible)
+				openCount++
 			}
 		}
 	}
-	return bd, false
+	fmt.Printf("ply %d, %d unsolved cells\n", ply, openCount)
+}
+
+func BackTrackSolution(bd *Board) {
+	bd.printPly(-1, "start backtracking")
+	solution, foundit := backTrackSolution(0, bd)
+	if foundit {
+		fmt.Println("\nBacktracking solution:")
+		solution.Print(os.Stdout)
+		fmt.Println("---------")
+	} else {
+		fmt.Println("No back tracking solution")
+	}
+}
+
+func backTrackSolution(ply int, bd *Board) (Board, bool) {
+	var emptyBoard Board
+	bd.printPly(ply, "enter backTrackSolution")
+	if valid, complete := bd.ValidAndComplete(); complete {
+		if valid {
+			fmt.Printf("ply %d: valid and complete\n", ply)
+			return *bd, true
+		}
+		fmt.Printf("ply %d complete but not valid\n", ply)
+		return emptyBoard, false
+	}
+	for rowNo := 0; rowNo < 9; rowNo++ {
+		for colNo := 0; colNo < 9; colNo++ {
+			if bd[rowNo][colNo].Solved {
+				continue
+			}
+			if len(bd[rowNo][colNo].Possible) == 0 {
+				fmt.Printf("ply %d: <%d,%d> no possibilities 1\n", ply, rowNo, colNo)
+				// no possibilities: this position is invalid
+				return emptyBoard, false
+			}
+			for _, digit := range bd[rowNo][colNo].Possible {
+				// set digit as bd[][].Value
+				fmt.Printf("ply %d: set <%d,%d> to %d\n", ply, rowNo, colNo, digit)
+				bd[rowNo][colNo].Value = digit
+				bd[rowNo][colNo].Solved = true
+
+				// erase all possibilities this affects
+				erasures := bd.erasePossibilities(rowNo, colNo, bd[rowNo][colNo].Block, digit)
+				erasedToInvalid := false
+				if len(erasures) > 0 {
+				FOUNDINVALID:
+					for r := 0; r < 9; r++ {
+						for c := 0; c < 9; c++ {
+							if bd[r][c].Solved {
+								continue
+							}
+							if len(bd[r][c].Possible) == 0 {
+								// erasures made an invalid position
+								fmt.Printf("ply %d: <%d,%d> no possibilities 2\n", ply, r, c)
+								bd.replaceEliminations(erasures)
+								erasedToInvalid = true
+								break FOUNDINVALID
+							}
+						}
+					}
+				}
+				if erasedToInvalid {
+					fmt.Printf("ply %d: reset <%d,%d> to unsolved 1\n", ply, rowNo, colNo)
+					bd[rowNo][colNo].Value = 0
+					bd[rowNo][colNo].Solved = false
+					continue
+				}
+
+				// check to see if this is a solution
+				if valid, complete := bd.ValidAndComplete(); complete {
+					fmt.Printf("ply %d complete and valid %v\n", ply, valid)
+					bd.Print(os.Stderr)
+					fmt.Printf("ply %d: reset <%d,%d> to unsolved 2\n", ply, rowNo, colNo)
+					bd[rowNo][colNo].Value = 0
+					bd[rowNo][colNo].Solved = false
+					bd.replaceEliminations(erasures)
+					return *bd, valid
+				}
+
+				// recurse
+				if solvedBd, solution := backTrackSolution(ply+1, bd); solution {
+					fmt.Printf("ply %d: reset <%d,%d> to unsolved 3\n", ply, rowNo, colNo)
+					bd[rowNo][colNo].Value = 0
+					bd[rowNo][colNo].Solved = false
+					bd.replaceEliminations(erasures)
+					return solvedBd, true
+				}
+
+				// reset all the erased possibilities
+				if len(erasures) > 0 {
+					bd.replaceEliminations(erasures)
+				}
+
+				// reset bd[][].Value
+				bd[rowNo][colNo].Value = 0
+				bd[rowNo][colNo].Solved = false
+				fmt.Printf("ply %d: reset <%d,%d> to unsolved 4\n", ply, rowNo, colNo)
+			}
+		}
+	}
+	bd.printPly(ply, "leave backTrackSolution")
+	fmt.Println("---")
+	return emptyBoard, false
 }
 
 func (bd *Board) replaceEliminations(eliminations [][3]int) {
