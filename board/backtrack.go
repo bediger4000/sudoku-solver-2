@@ -91,10 +91,11 @@ func backTrackSolution(ply int, bd *Board) (Board, bool) {
 					fmt.Printf("ply %d complete and valid %v\n", ply, valid)
 					bd.Print(os.Stderr)
 					fmt.Printf("ply %d: reset <%d,%d> to unsolved 2\n", ply, rowNo, colNo)
+					copy := *bd
 					bd[rowNo][colNo].Value = 0
 					bd[rowNo][colNo].Solved = false
 					bd.replaceEliminations(erasures)
-					return *bd, valid
+					return copy, valid
 				}
 
 				// recurse
