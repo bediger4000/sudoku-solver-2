@@ -124,14 +124,14 @@ func (bd *Board) ValidAndComplete() (bool, bool) {
 
 	for colNo := 0; colNo < 9; colNo++ {
 		digitCounts := [10]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-		colComplete := false
+		colComplete := true
 		sum := 0
 		for rowNo := 0; rowNo < 9; rowNo++ {
 			if bd[rowNo][colNo].Solved {
 				digitCounts[bd[rowNo][colNo].Value]++
 				sum += bd[rowNo][colNo].Value
 			} else {
-				colComplete = true
+				colComplete = false
 			}
 		}
 		for digit, count := range digitCounts {
