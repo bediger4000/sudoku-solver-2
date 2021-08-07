@@ -28,12 +28,15 @@ func (bd *Board) printPly(ply int, phrase string) {
 
 func BackTrackSolution(bd *Board) {
 	bd.printPly(-1, "start backtracking")
+	fmt.Println("===")
 	backTrackSolution(0, bd)
 	fmt.Println("===")
 }
 
+// backTrackSolution called recursively to find all valid boards.
+// It can find the same board more than once, because it looks at
+// each unsolved square.
 func backTrackSolution(ply int, bd *Board) {
-	bd.printPly(ply, "enter backTrackSolution")
 	if valid, complete := bd.ValidAndComplete(); complete {
 		if valid {
 			// a solution
@@ -53,21 +56,16 @@ func backTrackSolution(ply int, bd *Board) {
 				// no possibilities: this position is invalid
 				return
 			}
+			// copy .Possible slice because it gets cut up recursively.
 			possibleDigits := make([]int, len(bd[rowNo][colNo].Possible))
 			copy(possibleDigits, bd[rowNo][colNo].Possible)
 			for _, digit := range possibleDigits {
 				// set digit as bd[][].Value
-				fmt.Printf("\tply %d: set <%d,%d> to %d\n", ply, rowNo, colNo, digit)
 				bd[rowNo][colNo].Value = digit
 				bd[rowNo][colNo].Solved = true
 
 				// erase all possibilities this affects
 				erasures := bd.erasePossibilities(rowNo, colNo, bd[rowNo][colNo].Block, digit)
-				fmt.Printf("\tply %d: %d erasures\n", ply, len(erasures))
-				for _, p := range erasures {
-					fmt.Printf("\t<%d,%d> had %v, has %v\n",
-						p.row, p.col, p.possible, bd[rowNo][colNo].Possible)
-				}
 
 				// check to see if some square has no further possibilities
 				erasedToInvalid := false
@@ -79,7 +77,6 @@ func backTrackSolution(ply int, bd *Board) {
 								continue
 							}
 							if len(bd[r][c].Possible) == 0 {
-								fmt.Printf("\tply %d: <%d,%d>->%d, no possibilites at <%d,%d>\n", ply, rowNo, colNo, digit, r, c)
 								// erasures made an invalid position
 								erasedToInvalid = true
 								break FOUNDINVALID
@@ -101,7 +98,7 @@ func backTrackSolution(ply int, bd *Board) {
 						bd.Print(os.Stdout)
 					}
 				} else {
-					// recurse
+					// it's incomplete, open squares remain, recurse
 					backTrackSolution(ply+1, bd)
 				}
 
@@ -140,8 +137,6 @@ func (bd *Board) erasePossibilities(rowEliminate, colEliminate, blockEliminate, 
 			continue
 		}
 		if possible := bd.erase(rowEliminate, col, digitEliminate); len(possible) > 0 {
-			fmt.Printf("erased %d at <%d,%d>: %v\n",
-				digitEliminate, rowEliminate, col, bd[rowEliminate][col].Possible)
 			replace = append(replace, &replacement{rowEliminate, col, possible})
 		}
 	}
@@ -153,8 +148,6 @@ func (bd *Board) erasePossibilities(rowEliminate, colEliminate, blockEliminate, 
 			continue
 		}
 		if possible := bd.erase(row, colEliminate, digitEliminate); len(possible) > 0 {
-			fmt.Printf("erased %d at <%d,%d>: %v\n",
-				digitEliminate, row, colEliminate, bd[row][colEliminate].Possible)
 			replace = append(replace, &replacement{row, colEliminate, possible})
 		}
 	}
@@ -171,8 +164,6 @@ func (bd *Board) erasePossibilities(rowEliminate, colEliminate, blockEliminate, 
 				continue
 			}
 			if possible := bd.erase(row, col, digitEliminate); len(possible) > 0 {
-				fmt.Printf("erased %d at <%d,%d>: %v\n",
-					digitEliminate, row, col, bd[row][col].Possible)
 				replace = append(replace, &replacement{row, col, possible})
 			}
 		}
@@ -185,7 +176,6 @@ func (bd *Board) erase(row, col, digitEliminate int) []int {
 	l := len(bd[row][col].Possible)
 	for i := 0; i < l; i++ {
 		if bd[row][col].Possible[i] == digitEliminate {
-			fmt.Printf("\terase %d from %v at <%d,%d>\n", bd[row][col].Possible[i], bd[row][col].Possible, row, col)
 			// give it a new .Possible array missing digitEliminate
 			newpossibles := make([]int, l-1)
 			j := 0
@@ -193,13 +183,13 @@ func (bd *Board) erase(row, col, digitEliminate int) []int {
 				newpossibles[j] = bd[row][col].Possible[k]
 				j++
 			}
+			// skip bd[row][col].Possible[i] - it contains digitEliminate
 			for k := i + 1; k < l; k++ {
 				newpossibles[j] = bd[row][col].Possible[k]
 				j++
 			}
 			tmp := bd[row][col].Possible
 			bd[row][col].Possible = newpossibles
-			fmt.Printf("now has %v\n", bd[row][col].Possible)
 			return tmp
 		}
 	}
