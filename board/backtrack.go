@@ -5,6 +5,12 @@ import (
 	"os"
 )
 
+type replacement struct {
+	row      int
+	col      int
+	possible []int
+}
+
 func (bd *Board) printPly(ply int, phrase string) {
 	fmt.Printf("ply %d: %s\n", ply, phrase)
 	bd.Print(os.Stdout)
@@ -27,6 +33,7 @@ func BackTrackSolution(bd *Board) {
 }
 
 func backTrackSolution(ply int, bd *Board) {
+	bd.printPly(ply, "enter backTrackSolution")
 	if valid, complete := bd.ValidAndComplete(); complete {
 		if valid {
 			// a solution
@@ -46,13 +53,23 @@ func backTrackSolution(ply int, bd *Board) {
 				// no possibilities: this position is invalid
 				return
 			}
-			for _, digit := range bd[rowNo][colNo].Possible {
+			possibleDigits := make([]int, len(bd[rowNo][colNo].Possible))
+			copy(possibleDigits, bd[rowNo][colNo].Possible)
+			for _, digit := range possibleDigits {
 				// set digit as bd[][].Value
+				fmt.Printf("\tply %d: set <%d,%d> to %d\n", ply, rowNo, colNo, digit)
 				bd[rowNo][colNo].Value = digit
 				bd[rowNo][colNo].Solved = true
 
 				// erase all possibilities this affects
 				erasures := bd.erasePossibilities(rowNo, colNo, bd[rowNo][colNo].Block, digit)
+				fmt.Printf("\tply %d: %d erasures\n", ply, len(erasures))
+				for _, p := range erasures {
+					fmt.Printf("\t<%d,%d> had %v, has %v\n",
+						p.row, p.col, p.possible, bd[rowNo][colNo].Possible)
+				}
+
+				// check to see if some square has no further possibilities
 				erasedToInvalid := false
 				if len(erasures) > 0 {
 				FOUNDINVALID:
@@ -62,6 +79,7 @@ func backTrackSolution(ply int, bd *Board) {
 								continue
 							}
 							if len(bd[r][c].Possible) == 0 {
+								fmt.Printf("\tply %d: <%d,%d>->%d, no possibilites at <%d,%d>\n", ply, rowNo, colNo, digit, r, c)
 								// erasures made an invalid position
 								erasedToInvalid = true
 								break FOUNDINVALID
@@ -100,19 +118,20 @@ func backTrackSolution(ply int, bd *Board) {
 	}
 }
 
-func (bd *Board) replaceEliminations(eliminations [][3]int) {
+func (bd *Board) replaceEliminations(eliminations []*replacement) {
 	for idx := range eliminations {
-		row, col, digit := eliminations[idx][0], eliminations[idx][1], eliminations[idx][2]
-		bd[row][col].Possible = append(bd[row][col].Possible, digit)
+		e := eliminations[idx]
+		bd[e.row][e.col].Possible = e.possible
 	}
 }
 
 // erasePossibilities erases all instances of digitEliminate
 // from other squares in rowEliminate, colEliminate and blockEliminate,
-// returning a slice of [3]int: {row, col, digit}, each representing
-// an erased digit in square [row][col]
-func (bd *Board) erasePossibilities(rowEliminate, colEliminate, blockEliminate, digitEliminate int) [][3]int {
-	eliminations := make([][3]int, 0)
+// returning a slice of []int: {row, col, original []int}. The
+// erased digit in square [row][col] will be missing from slice
+// bd[row][col].Possible. This returns the original .Possible element
+func (bd *Board) erasePossibilities(rowEliminate, colEliminate, blockEliminate, digitEliminate int) []*replacement {
+	var replace []*replacement
 	for col := 0; col < 9; col++ {
 		if bd[rowEliminate][col].Solved {
 			continue
@@ -120,8 +139,10 @@ func (bd *Board) erasePossibilities(rowEliminate, colEliminate, blockEliminate, 
 		if col == colEliminate {
 			continue
 		}
-		if bd.erase(rowEliminate, col, digitEliminate) {
-			eliminations = append(eliminations, [3]int{rowEliminate, col, digitEliminate})
+		if possible := bd.erase(rowEliminate, col, digitEliminate); len(possible) > 0 {
+			fmt.Printf("erased %d at <%d,%d>: %v\n",
+				digitEliminate, rowEliminate, col, bd[rowEliminate][col].Possible)
+			replace = append(replace, &replacement{rowEliminate, col, possible})
 		}
 	}
 	for row := 0; row < 9; row++ {
@@ -131,8 +152,10 @@ func (bd *Board) erasePossibilities(rowEliminate, colEliminate, blockEliminate, 
 		if row == rowEliminate {
 			continue
 		}
-		if bd.erase(row, colEliminate, digitEliminate) {
-			eliminations = append(eliminations, [3]int{row, colEliminate, digitEliminate})
+		if possible := bd.erase(row, colEliminate, digitEliminate); len(possible) > 0 {
+			fmt.Printf("erased %d at <%d,%d>: %v\n",
+				digitEliminate, row, colEliminate, bd[row][colEliminate].Possible)
+			replace = append(replace, &replacement{row, colEliminate, possible})
 		}
 	}
 
@@ -141,20 +164,49 @@ func (bd *Board) erasePossibilities(rowEliminate, colEliminate, blockEliminate, 
 			if row == rowEliminate && col == colEliminate {
 				continue
 			}
+			if bd[row][col].Block != blockEliminate {
+				continue
+			}
 			if bd[row][col].Solved {
 				continue
 			}
-			if bd[row][col].Block == blockEliminate {
-				if bd.erase(row, col, digitEliminate) {
-					eliminations = append(eliminations, [3]int{row, col, digitEliminate})
-				}
+			if possible := bd.erase(row, col, digitEliminate); len(possible) > 0 {
+				fmt.Printf("erased %d at <%d,%d>: %v\n",
+					digitEliminate, row, col, bd[row][col].Possible)
+				replace = append(replace, &replacement{row, col, possible})
 			}
 		}
 	}
 
-	return eliminations
+	return replace
 }
 
+func (bd *Board) erase(row, col, digitEliminate int) []int {
+	l := len(bd[row][col].Possible)
+	for i := 0; i < l; i++ {
+		if bd[row][col].Possible[i] == digitEliminate {
+			fmt.Printf("\terase %d from %v at <%d,%d>\n", bd[row][col].Possible[i], bd[row][col].Possible, row, col)
+			// give it a new .Possible array missing digitEliminate
+			newpossibles := make([]int, l-1)
+			j := 0
+			for k := 0; k < i; k++ {
+				newpossibles[j] = bd[row][col].Possible[k]
+				j++
+			}
+			for k := i + 1; k < l; k++ {
+				newpossibles[j] = bd[row][col].Possible[k]
+				j++
+			}
+			tmp := bd[row][col].Possible
+			bd[row][col].Possible = newpossibles
+			fmt.Printf("now has %v\n", bd[row][col].Possible)
+			return tmp
+		}
+	}
+	return nil
+}
+
+/*
 // erase will eliminate at most 1 digit from
 // the bd[row][col].Possible slice
 func (bd *Board) erase(row, col, digitEliminate int) bool {
@@ -166,3 +218,4 @@ func (bd *Board) erase(row, col, digitEliminate int) bool {
 	}
 	return false
 }
+*/
