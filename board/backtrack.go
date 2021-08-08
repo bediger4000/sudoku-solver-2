@@ -11,6 +11,33 @@ type replacement struct {
 	possible []int
 }
 
+// Track unique boards
+var uniqueBoards = make(map[[81]byte]bool)
+var uniqueBoardCount int
+
+// stringify makes an 81-byte slice with byte-numerical-values from
+// the solved .Value of each Cell in a Board.
+func (bd *Board) stringify() [81]byte {
+	var key [81]byte
+	for rowNo := 0; rowNo < 9; rowNo++ {
+		for colNo := 0; colNo < 9; colNo++ {
+			key[rowNo*9+colNo] = byte(bd[rowNo][colNo].Value)
+		}
+	}
+	return key
+}
+
+// printUniqueBoards prints only the unique boards it gets passed.
+func printUniqueBoards(bd *Board) {
+	boardKey := bd.stringify()
+	if !uniqueBoards[boardKey] {
+		uniqueBoardCount++
+		fmt.Printf("*** backtracking solution %d\n", uniqueBoardCount)
+		bd.Print(os.Stdout)
+		uniqueBoards[boardKey] = true
+	}
+}
+
 func (bd *Board) printPly(ply int, phrase string) {
 	fmt.Printf("ply %d: %s\n", ply, phrase)
 	bd.Print(os.Stdout)
@@ -30,23 +57,18 @@ func BackTrackSolution(bd *Board) {
 	bd.printPly(-1, "start backtracking")
 	fmt.Println("===")
 	backTrackSolution(0, bd)
-	fmt.Println("===")
+	fmt.Print("===")
+	if uniqueBoardCount > 0 {
+		fmt.Printf(" %d backtracking solutions\n", uniqueBoardCount)
+		return
+	}
+	fmt.Println()
 }
 
 // backTrackSolution called recursively to find all valid boards.
 // It can find the same board more than once, because it looks at
 // each unsolved square.
 func backTrackSolution(ply int, bd *Board) {
-	if valid, complete := bd.ValidAndComplete(); complete {
-		if valid {
-			// a solution
-			fmt.Println("---")
-			bd.Print(os.Stdout)
-			return
-		}
-		// complete, but invalid
-		return
-	}
 	for rowNo := 0; rowNo < 9; rowNo++ {
 		for colNo := 0; colNo < 9; colNo++ {
 			if bd[rowNo][colNo].Solved {
@@ -94,8 +116,7 @@ func backTrackSolution(ply int, bd *Board) {
 				// check to see if this is a solution
 				if valid, complete := bd.ValidAndComplete(); complete {
 					if valid {
-						fmt.Println("***")
-						bd.Print(os.Stdout)
+						printUniqueBoards(bd)
 					}
 				} else {
 					// it's incomplete, open squares remain, recurse
