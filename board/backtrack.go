@@ -14,6 +14,7 @@ type replacement struct {
 // Track unique boards
 var uniqueBoards = make(map[[81]byte]bool)
 var uniqueBoardCount int
+var invalidBoardCount int
 
 // stringify makes an 81-byte slice with byte-numerical-values from
 // the solved .Value of each Cell in a Board.
@@ -42,15 +43,17 @@ func (bd *Board) printPly(ply int, phrase string) {
 	fmt.Printf("ply %d: %s\n", ply, phrase)
 	bd.Print(os.Stdout)
 	openCount := 0
+	possibleCombinations := 1
 	for rowNo := 0; rowNo < 9; rowNo++ {
 		for colNo := 0; colNo < 9; colNo++ {
 			if !bd[rowNo][colNo].Solved {
 				fmt.Printf("  <%d,%d> can hold %v\n", rowNo, colNo, bd[rowNo][colNo].Possible)
 				openCount++
+				possibleCombinations *= len(bd[rowNo][colNo].Possible)
 			}
 		}
 	}
-	fmt.Printf("ply %d, %d unsolved cells\n", ply, openCount)
+	fmt.Printf("ply %d, %d unsolved cells, might take %d attempts\n", ply, openCount, possibleCombinations)
 }
 
 func BackTrackSolution(bd *Board) {
@@ -69,6 +72,9 @@ func BackTrackSolution(bd *Board) {
 // It can find the same board more than once, because it looks at
 // each unsolved square.
 func backTrackSolution(ply int, bd *Board) {
+	if invalidBoardCount > 1 && invalidBoardCount%1000000 == 0 {
+		fmt.Printf("%d invalid boards found so far\n", invalidBoardCount)
+	}
 	for rowNo := 0; rowNo < 9; rowNo++ {
 		for colNo := 0; colNo < 9; colNo++ {
 			if bd[rowNo][colNo].Solved {
@@ -76,6 +82,7 @@ func backTrackSolution(ply int, bd *Board) {
 			}
 			if len(bd[rowNo][colNo].Possible) == 0 {
 				// no possibilities: this position is invalid
+				invalidBoardCount++
 				return
 			}
 			// copy .Possible slice because it gets cut up recursively.
@@ -110,13 +117,16 @@ func backTrackSolution(ply int, bd *Board) {
 					bd.replaceEliminations(erasures)
 					bd[rowNo][colNo].Value = 0
 					bd[rowNo][colNo].Solved = false
+					invalidBoardCount++
 					continue
 				}
 
 				// check to see if this is a solution
 				if valid, complete := bd.ValidAndComplete(); complete {
+					invalidBoardCount++
 					if valid {
 						printUniqueBoards(bd)
+						invalidBoardCount--
 					}
 				} else {
 					// it's incomplete, open squares remain, recurse
