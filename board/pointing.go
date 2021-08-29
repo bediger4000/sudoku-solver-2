@@ -67,66 +67,75 @@ var blocks = [9][9]pos{
 }
 
 func (bd *Board) PointingElimination(announce bool) int {
+
 	eliminated := 0
 	for blockNo := 0; blockNo < 9; blockNo++ {
-		var cells [10][]*Cell
+		block := blocks[blockNo]
 
-		for _, p := range blocks[blockNo] {
-			c := &(bd[p.row][p.col])
-			if c.Solved {
+		m := make(map[int][]pos)
+
+		for pi := 0; pi < 9; pi++ {
+			if bd[block[pi].row][block[pi].col].Solved {
 				continue
 			}
-			for _, poss := range c.Possible {
-				cells[poss] = append(cells[poss], c)
+			for _, possible := range bd[block[pi].row][block[pi].col].Possible {
+				m[possible] = append(m[possible], block[pi])
 			}
+		}
 
-			for poss := 0; poss < 9; poss++ {
-				if len(cells[poss]) != 2 {
-					continue
-				}
-				// there's 2 cells each with i as a possiblie value
-				c0 := cells[poss][0]
-				c1 := cells[poss][1]
-				if c0.Row == c1.Row {
-					fmt.Printf("Cells <%d,%d> & <%d,%d>, common poss %d, on row %d\n",
-						c0.Row, c0.Col, c1.Row, c1.Col, poss, c0.Row,
-					)
-					row := c0.Row
-					for col := 0; col < 9; col++ {
-						if bd[row][col].Solved {
-							continue
-						}
-						if bd[row][col].Block == blockNo {
-							continue
-						}
-						m := bd.SpliceOut(row, col, poss)
-						if announce && m > 0 {
-							fmt.Printf("eliminated %d by pointing at <%d,%d>\n", poss, row, col)
-						}
-						eliminated += m
+		for possible, positions := range m {
+			if len(positions) == 2 {
+				if positions[0].row == positions[1].row {
+					rowEliminate := positions[0].row
+					if announce {
+						fmt.Printf("row %d pointing elimination %ds because <%d,%d> and <%d,%d>\n",
+							rowEliminate,
+							possible,
+							positions[0].row, positions[0].col,
+							positions[1].row, positions[1].col,
+						)
 					}
 
-					continue
-				}
-				if c0.Col == c1.Col {
-					fmt.Printf("Cells <%d,%d> & <%d,%d>, common poss %d, on col %d\n",
-						c0.Row, c0.Col, c1.Row, c1.Col, poss, c0.Col,
-					)
-					col := c0.Col
-					for row := 0; row < 9; row++ {
-						if bd[row][col].Solved {
+					for colNo := 0; colNo < 9; colNo++ {
+						if rowEliminate == positions[0].row && colNo == positions[0].col {
 							continue
 						}
-						if bd[row][col].Block == blockNo {
+						if rowEliminate == positions[1].row && colNo == positions[1].col {
 							continue
 						}
-						m := bd.SpliceOut(row, col, poss)
-						if announce && m > 0 {
-							fmt.Printf("eliminated %d by pointing at <%d,%d>\n", poss, row, col)
+						x := bd.SpliceOut(rowEliminate, colNo, possible)
+						if announce && x == 1 {
+							fmt.Printf("Eliminated %d at <%d,%d> due to pointing\n",
+								possible, rowEliminate, colNo)
 						}
-						eliminated += m
+						eliminated += x
 					}
-					continue
+				}
+				if positions[0].col == positions[1].col {
+					colEliminate := positions[0].col
+					if announce {
+						fmt.Printf("col %d pointing elimination of %ds because <%d,%d> and <%d,%d>\n",
+							colEliminate,
+							possible,
+							positions[0].row, positions[0].col,
+							positions[1].row, positions[1].col,
+						)
+					}
+
+					for rowNo := 0; rowNo < 9; rowNo++ {
+						if rowNo == positions[0].row && colEliminate == positions[0].col {
+							continue
+						}
+						if rowNo == positions[1].row && colEliminate == positions[1].col {
+							continue
+						}
+						x := bd.SpliceOut(rowNo, colEliminate, possible)
+						if announce && x == 1 {
+							fmt.Printf("Eliminated %d at <%d,%d> due to pointing\n",
+								possible, rowNo, colEliminate)
+						}
+						eliminated += x
+					}
 				}
 			}
 		}
