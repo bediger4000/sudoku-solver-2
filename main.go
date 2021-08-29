@@ -118,15 +118,9 @@ func main() {
 		}
 
 		if n == 0 && pointingElimination {
-			fmt.Println("--- before pointing ---")
-			bd.PrintAsInput(os.Stdout)
-			fmt.Println("--- before pointing ---")
 			m = (&bd).PointingElimination(announceSolutions)
 			fmt.Printf("Eliminated %d candidates via pointing\n", m)
 			n += m
-			fmt.Println("--- after pointing ---")
-			bd.PrintAsInput(os.Stdout)
-			fmt.Println("--- after pointing ---")
 		}
 
 		if !(&bd).Valid() {
