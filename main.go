@@ -19,6 +19,7 @@ func main() {
 	var hiddenPairElimination bool
 	var solveByBackTracking bool
 	var pointingElimination bool
+	var xwingElimination bool
 	var finalOutput bool
 	flag.BoolVar(&finalOutput, "f", false, "print final board in PostScript")
 	flag.BoolVar(&validateOnly, "v", false, "validate input board only")
@@ -30,6 +31,7 @@ func main() {
 	flag.BoolVar(&nakedPairElimination, "N", false, "perform naked pair elimination")
 	flag.BoolVar(&hiddenPairElimination, "H", false, "perform hidden pair elimination")
 	flag.BoolVar(&pointingElimination, "P", false, "perform block pointing elimination")
+	flag.BoolVar(&xwingElimination, "X", false, "perform Xwing elimination")
 	flag.BoolVar(&solveByBackTracking, "B", false, "solve by backtracking, if necessary")
 	postScriptFileName := flag.String("p", "", "PostScript output in this file")
 	flag.Parse()
@@ -120,6 +122,12 @@ func main() {
 		if n == 0 && pointingElimination {
 			m = (&bd).PointingElimination(announceSolutions)
 			fmt.Printf("Eliminated %d candidates via pointing\n", m)
+			n += m
+		}
+
+		if n == 0 && xwingElimination {
+			m = (&bd).XwingEliminate(announceSolutions)
+			fmt.Printf("Eliminated %d candidates via xwing\n", m)
 			n += m
 		}
 
