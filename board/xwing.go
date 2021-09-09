@@ -3,7 +3,8 @@ package board
 import "fmt"
 
 func (bd *Board) XwingEliminate(announce bool) int {
-	eliminated := bd.xwingRowEliminate(announce)
+	var eliminated int
+	eliminated += bd.xwingRowEliminate(announce)
 	eliminated += bd.xwingColEliminate(announce)
 	return eliminated
 }
@@ -83,5 +84,69 @@ func (bd *Board) xwingRowEliminate(announce bool) int {
 // xwingColEliminate finds 2 cols with some possible value in the same rows,
 // eliminates that possible value from the rows.
 func (bd *Board) xwingColEliminate(announce bool) int {
-	return 0
+	var rowsForCol [9]map[int][]int
+
+	for idx := range rowsForCol {
+		rowsForCol[idx] = make(map[int][]int)
+	}
+
+	for colNo := 0; colNo < 9; colNo++ {
+		for rowNo := 0; rowNo < 9; rowNo++ {
+			if bd[rowNo][colNo].Solved {
+				continue
+			}
+			for _, poss := range bd[rowNo][colNo].Possible {
+				rowsForCol[colNo][poss] = append(rowsForCol[colNo][poss], rowNo)
+			}
+		}
+	}
+
+	eliminatedCount := 0
+
+	for colNo := 0; colNo < 9; colNo++ {
+		rowsFor := rowsForCol[colNo]
+		for poss := 1; poss <= 9; poss++ {
+			if len(rowsFor[poss]) == 2 {
+				for otherCol := 0; otherCol < 9; otherCol++ {
+					if colNo == otherCol {
+						continue
+					}
+					otherRows := rowsForCol[otherCol]
+					if len(otherRows[poss]) == 2 {
+						if (rowsFor[poss][0] == otherRows[poss][0] && rowsFor[poss][1] == otherRows[poss][1]) ||
+							(rowsFor[poss][0] == otherRows[poss][1] && rowsFor[poss][1] == otherRows[poss][0]) {
+							if announce {
+								fmt.Printf(
+									"Xwing for %d, col <%d,%d>/<%d,%d>  <%d,%d>/<%d,%d>\n",
+									poss,
+									rowsFor[poss][0], colNo,
+									rowsFor[poss][1], colNo,
+									otherRows[poss][0], otherCol,
+									otherRows[poss][1], otherCol,
+								)
+							}
+							rowA, rowB := rowsFor[poss][0], rowsFor[poss][1]
+							for newCol := 0; newCol < 9; newCol++ {
+								if newCol == colNo || newCol == otherCol {
+									continue
+								}
+								m := bd.SpliceOut(rowA, newCol, poss)
+								if m == 1 && announce {
+									fmt.Printf("Xwing eliminate %d at <%d,%d>\n", poss, rowA, newCol)
+								}
+								eliminatedCount += m
+								m = bd.SpliceOut(rowB, newCol, poss)
+								if m == 1 && announce {
+									fmt.Printf("Xwing eliminate %d at <%d,%d>\n", poss, rowB, newCol)
+								}
+								eliminatedCount += m
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return eliminatedCount
 }
