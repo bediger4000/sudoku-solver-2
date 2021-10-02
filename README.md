@@ -23,9 +23,10 @@ $ ./sudoku2 -P -X -H -N -a input.file
 ```
 
 You have to turn on naked pair elimination (-N), hidden pair elimination (-H),
+block pointing elimination (-P),
 and X-Wing elimination (-X).
 The "-a" flag announces eliminations and cell solutions.
-Almost all puzzles rated "medium" or harder need both extra eliminations.
+Almost all puzzles rated "medium" or harder need one or more extra eliminations.
 
 The `sudoku2` executable reads boards from stdin,
 writes progress and any solution on stdout.
