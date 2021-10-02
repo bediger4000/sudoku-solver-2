@@ -106,8 +106,8 @@ func (bd *Board) ColNakedPairs(announce bool) int {
 		for _, cellArray := range setsMatching {
 			if len(cellArray) == 2 {
 				if announce {
-					fmt.Printf("found naked pair (%d,%d) in col %d, cols %d and %d\n",
-						cellArray[0].a, cellArray[0].b, colNo, cellArray[0].col, cellArray[1].col)
+					fmt.Printf("found naked pair (%d,%d) in col %d, rows %d and %d\n",
+						cellArray[0].a, cellArray[0].b, colNo, cellArray[0].row, cellArray[1].row)
 				}
 
 				// found 2 cells in column colNo with matching pairs,
