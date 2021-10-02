@@ -39,8 +39,7 @@ func printUniqueBoards(bd *Board) {
 	}
 }
 
-func (bd *Board) printPly(ply int, phrase string) {
-	fmt.Printf("ply %d: %s\n", ply, phrase)
+func (bd *Board) printPly() {
 	bd.Print(os.Stdout)
 	openCount := 0
 	possibleCombinations := 1
@@ -53,11 +52,11 @@ func (bd *Board) printPly(ply int, phrase string) {
 			}
 		}
 	}
-	fmt.Printf("ply %d, %d unsolved cells, might take %d attempts\n", ply, openCount, possibleCombinations)
+	fmt.Printf("%d unsolved cells, might take %d attempts\n", openCount, possibleCombinations)
 }
 
 func BackTrackSolution(bd *Board) {
-	bd.printPly(-1, "start backtracking")
+	bd.printPly()
 	fmt.Println("===")
 	backTrackSolution(0, bd)
 	fmt.Print("===")
@@ -69,13 +68,17 @@ func BackTrackSolution(bd *Board) {
 }
 
 // backTrackSolution called recursively to find all valid boards.
-// It can find the same board more than once, because it looks at
-// each unsolved square.
+// It looks through all the squares on the board to find an unsolved
+// square, then does all the possibilities for that square. Since the
+// recursive call of backTrackSolution will find an unsolved square,
+// there's no need to do every unsolved square at this ply.
+// It can find the same board more than once.
 func backTrackSolution(ply int, bd *Board) {
 	if invalidBoardCount > 1 && invalidBoardCount%1000000 == 0 {
 		fmt.Printf("%d invalid boards found so far\n", invalidBoardCount)
 	}
 	for rowNo := 0; rowNo < 9; rowNo++ {
+		foundAnEmpty := false
 		for colNo := 0; colNo < 9; colNo++ {
 			if bd[rowNo][colNo].Solved {
 				continue
@@ -142,6 +145,11 @@ func backTrackSolution(ply int, bd *Board) {
 				bd[rowNo][colNo].Value = 0
 				bd[rowNo][colNo].Solved = false
 			}
+			foundAnEmpty = true
+			break
+		}
+		if foundAnEmpty {
+			break
 		}
 	}
 }
