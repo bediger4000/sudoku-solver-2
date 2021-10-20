@@ -18,6 +18,7 @@ func main() {
 	var nakedPairElimination bool
 	var hiddenPairElimination bool
 	var solveByBackTracking bool
+	var backTrackingOnly bool
 	var pointingElimination bool
 	var xwingElimination bool
 	var finalOutput bool
@@ -33,6 +34,7 @@ func main() {
 	flag.BoolVar(&pointingElimination, "P", false, "perform block pointing elimination")
 	flag.BoolVar(&xwingElimination, "X", false, "perform Xwing elimination")
 	flag.BoolVar(&solveByBackTracking, "B", false, "solve by backtracking, if necessary")
+	flag.BoolVar(&backTrackingOnly, "b", false, "solve by backtracking only, no other eliminations")
 	postScriptFileName := flag.String("p", "", "PostScript output in this file")
 	flag.Parse()
 
@@ -85,7 +87,7 @@ func main() {
 	n := 1
 	m := 0
 	count := 0
-	for n > 0 && count < 81 {
+	for !backTrackingOnly && n > 0 && count < 81 {
 		count++
 		n = 0
 
@@ -136,7 +138,7 @@ func main() {
 		}
 	}
 
-	if solveByBackTracking && !bd.Finished() {
+	if (solveByBackTracking || backTrackingOnly) && !bd.Finished() {
 		fmt.Println("Solving via backtracking")
 		board.BackTrackSolution(&bd)
 	}
