@@ -118,7 +118,7 @@ _ 6 _ 5 _ _ _ 3 7
 _ _ _ _ 7 2 9 _ _ 
 ```
 
-After doing eliminations the empty squares have these possiblities:
+After doing easier eliminations the empty squares have these possiblities:
 
 * <0,0> can hold [2 5 7 8]
 * <0,1> can hold [5 8]
