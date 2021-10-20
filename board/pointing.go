@@ -138,6 +138,69 @@ func (bd *Board) PointingElimination(announce bool) int {
 					}
 				}
 			}
+			if len(positions) == 3 {
+				// check for 3-in-a-row or 3-in-a-col pointing
+				if positions[0].row == positions[1].row &&
+					positions[0].row == positions[2].row {
+					rowEliminate := positions[0].row
+					if announce {
+						fmt.Printf("row %d pointing elimination %ds because <%d,%d>, <%d,%d> and <%d,%d>\n",
+							rowEliminate,
+							possible,
+							positions[0].row, positions[0].col,
+							positions[1].row, positions[1].col,
+							positions[2].row, positions[2].col,
+						)
+					}
+					for colNo := 0; colNo < 9; colNo++ {
+						if rowEliminate == positions[0].row && colNo == positions[0].col {
+							continue
+						}
+						if rowEliminate == positions[1].row && colNo == positions[1].col {
+							continue
+						}
+						if rowEliminate == positions[2].row && colNo == positions[2].col {
+							continue
+						}
+						x := bd.SpliceOut(rowEliminate, colNo, possible)
+						if announce && x == 1 {
+							fmt.Printf("\tEliminated %d at <%d,%d> due to 3-in-a-row pointing\n",
+								possible, rowEliminate, colNo)
+						}
+						eliminated += x
+					}
+				}
+				if positions[0].col == positions[1].col &&
+					positions[0].col == positions[2].col {
+					colEliminate := positions[0].col
+					if announce {
+						fmt.Printf("col %d pointing elimination %ds because <%d,%d>, <%d,%d> and <%d,%d>\n",
+							colEliminate,
+							possible,
+							positions[0].row, positions[0].col,
+							positions[1].row, positions[1].col,
+							positions[2].row, positions[2].col,
+						)
+					}
+					for rowNo := 0; rowNo < 9; rowNo++ {
+						if rowNo == positions[0].row && colEliminate == positions[0].col {
+							continue
+						}
+						if rowNo == positions[1].row && colEliminate == positions[1].col {
+							continue
+						}
+						if rowNo == positions[2].row && colEliminate == positions[2].col {
+							continue
+						}
+						x := bd.SpliceOut(rowNo, colEliminate, possible)
+						if announce && x == 1 {
+							fmt.Printf("\tEliminated %d at <%d,%d> due to 3-in-a-col pointing\n",
+								possible, rowNo, colEliminate)
+						}
+						eliminated += x
+					}
+				}
+			}
 		}
 	}
 	return eliminated
