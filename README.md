@@ -42,6 +42,7 @@ Usage of ./sudoku2:
   -P    perform block pointing elimination
   -X    perform Xwing elimination
   -a    announce solution digits
+  -b    solve by backtracking only, no other eliminations
   -c    on incomplete solution, print digit possibilities
   -f    print final board in PostScript
   -i    print intermediate solved boards
@@ -174,3 +175,13 @@ a unique solution either.
 
 I suspect that the interviewers who posed the "Solve Sudoku efficiently"
 problem wanted some kind of constraint solver.
+If you really want to use backtracking,
+I added two flags, `-b` and `-B`,
+and supporting code.
+The `-b` flag solves sudokus by backtracking only,
+doing no other eliminations.
+The `-B` flag does backtracking after all other eliminations are complete.
+Backtracking may not be an efficient method of solving sudokus,
+but it will find all solutions for ambigous starting positions,
+positions that have more than 1 legal solution.
+
