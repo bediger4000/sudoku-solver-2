@@ -7,7 +7,13 @@ I decided to write my own solver to understand the methods.
 My [other sudoku solver](https://github.com/bediger4000/mediocre-sudoku-solver)
 ended up too hard to understand after an interval of neglect.
 Here's my second attempt.
-It gets exactly the same answers as the first solver.
+
+The advantage of this program over others using
+[constraint solvers](https://github.com/the1ullneversee/SudokuSolver)
+is that it uses algorithms that humans are fully capable of using.
+If you run it with `-a` flag,
+it can actually give you hints about what you, a human,
+might do to solve a given puzzle.
 
 ## Building
 
