@@ -4,10 +4,6 @@ My 85-year-old mother does sudoku puzzles.
 I asked her to show me how she solves them.
 I decided to write my own solver to understand the methods.
 
-My [other sudoku solver](https://github.com/bediger4000/mediocre-sudoku-solver)
-ended up too hard to understand after an interval of neglect.
-Here's my second attempt.
-
 The advantage of this program over others using
 [constraint solvers](https://github.com/the1ullneversee/SudokuSolver)
 is that it uses algorithms that humans are fully capable of using.
