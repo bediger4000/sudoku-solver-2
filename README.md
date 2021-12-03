@@ -38,7 +38,7 @@ command line argument.
 ```
 Usage of ./sudoku2:
   -B    solve by backtracking, if necessary
-  -C    print digit possibilities in PostScript output
+  -C    put digit possibilities in PostScript output
   -H    perform hidden pair elimination
   -N    perform naked pair elimination
   -P    perform block pointing elimination
@@ -46,11 +46,11 @@ Usage of ./sudoku2:
   -a    announce solution digits
   -b    solve by backtracking only, no other eliminations
   -c    on incomplete solution, print digit possibilities
-  -f    print final board in PostScript
-  -i    print intermediate solved boards
+  -f    output final board in PostScript
+  -i    output intermediate solved boards
   -p string
         PostScript output in this file
-  -t    print final board in input format
+  -t    output final board in input format
   -v    validate input board only
 ```
 
@@ -63,9 +63,10 @@ suitable for printing on 8.5 x 11 paper:
 ./sudoku2 -H -N -X -P -f -c -p puzzle.ps puzzle.in
 ```
 
-The first variant prints a plain Sudoku puzzle, suitable for solving by hand.
+The first variant creates PostScript of a plain Sudoku puzzle,
+suitable for printing out, and solving by hand.
 The second and third variants put in "pencil marks",
-the possible solutions for any given square.
+the possible solutions for any given square, in the PostScript output.
 The third variation puts in "pencil marks" after all eliminations
 the program knows about have happened.
 
