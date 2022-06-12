@@ -89,6 +89,7 @@ func main() {
 	count := 0
 	for !backTrackingOnly && n > 0 && count < 81 {
 		count++
+		fmt.Printf("-- Iteration %d\n", count)
 		n = 0
 
 		m = (&bd).FindSingles(announceSolutions)
