@@ -23,8 +23,8 @@ var digitOffsets [10]CellCoord = [10]CellCoord{
 	CellCoord{X: 17, Y: -17},
 }
 
-func (bd *Board) EmitPostScript(out io.Writer, fileName string, printPossibles bool) {
-	fmt.Fprintf(out, PSHeader, fileName)
+func (bd *Board) EmitPostScript(out io.Writer, phrase string, printPossibles bool) {
+	fmt.Fprintf(out, PSHeader, phrase)
 	for row := 0; row < 9; row++ {
 		for col := 0; col < 9; col++ {
 			xoffset := 50*col + 94

@@ -36,6 +36,7 @@ func main() {
 	flag.BoolVar(&solveByBackTracking, "B", false, "solve by backtracking, if necessary")
 	flag.BoolVar(&backTrackingOnly, "b", false, "solve by backtracking only, no other eliminations")
 	postScriptFileName := flag.String("p", "", "PostScript output in this file")
+	phrase := flag.String("y", "", "phrase to print in PostScript")
 	flag.Parse()
 
 	fin := os.Stdin
@@ -62,7 +63,10 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		(&bd).EmitPostScript(fout, *postScriptFileName, printPossiblePS)
+		if *phrase == "" {
+			*phrase = *postScriptFileName
+		}
+		(&bd).EmitPostScript(fout, *phrase, printPossiblePS)
 		return
 	}
 
