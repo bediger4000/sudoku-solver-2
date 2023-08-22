@@ -41,6 +41,9 @@ func (bd *Board) RowHiddenTriplets(announce bool) int {
 		cellsPossible := make(map[int][]*Cell)
 		var count [10]int
 		for c := 0; c < 9; c++ {
+			if bdRow[c].Solved {
+				continue
+			}
 			for _, v := range bdRow[c].Possible {
 				count[v]++
 				cellsPossible[v] = append(cellsPossible[v], &(bdRow[c]))
@@ -133,6 +136,9 @@ func (bd *Board) ColHiddenTriplets(announce bool) int {
 		cellsPossible := make(map[int][]*Cell)
 		var count [10]int
 		for r := 0; r < 9; r++ {
+			if (*bd)[r][colNo].Solved {
+				continue
+			}
 			for _, v := range (*bd)[r][colNo].Possible {
 				count[v]++
 				cellsPossible[v] = append(cellsPossible[v], &((*bd)[r][colNo]))
