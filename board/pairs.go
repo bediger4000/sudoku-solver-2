@@ -11,11 +11,11 @@ func (bd *Board) NakedPairEliminate(announce bool) int {
 
 // all the info needed to do matching pair elimination
 type pairMarker struct {
-	row int
-	col int
-	a   int
-	b   int
-	rep int
+	row int // row in which to find this pair
+	col int // columun in which to find this pair
+	a   int // low value of pair
+	b   int // high value of pair
+	rep int // 10*a+b, a "hash" of both values of the pair
 }
 
 func (bd *Board) RowNakedPairs(announce bool) int {
