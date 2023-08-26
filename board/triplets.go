@@ -4,24 +4,24 @@ import (
 	"fmt"
 )
 
-func (bd *Board) Triplets(announce bool) int {
-	candidatesEliminated := bd.RowTriplets(announce)
-	candidatesEliminated += bd.ColTriplets(announce)
-	candidatesEliminated += bd.BlockTriplets(announce)
+func (bd *Board) NakedTripletsEliminate(announce bool) int {
+	candidatesEliminated := bd.RowNakedTriplets(announce)
+	candidatesEliminated += bd.ColNakedTriplets(announce)
+	candidatesEliminated += bd.BlockNakedTriplets(announce)
 	return candidatesEliminated
 }
 
-func (bd *Board) RowTriplets(announce bool) int {
+func (bd *Board) RowNakedTriplets(announce bool) int {
 	totalEliminated := 0
 	return totalEliminated
 }
 
-func (bd *Board) ColTriplets(announce bool) int {
+func (bd *Board) ColNakedTriplets(announce bool) int {
 	totalEliminated := 0
 	return totalEliminated
 }
 
-func (bd *Board) BlockTriplets(announce bool) int {
+func (bd *Board) BlockNakedTriplets(announce bool) int {
 	totalEliminated := 0
 	return totalEliminated
 }

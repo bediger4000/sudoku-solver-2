@@ -18,6 +18,7 @@ func main() {
 	var nakedPairElimination bool
 	var hiddenPairElimination bool
 	var hiddenTripletsElimination bool
+	var nakedTripletsElimination bool
 	var solveByBackTracking bool
 	var backTrackingOnly bool
 	var pointingElimination bool
@@ -32,7 +33,8 @@ func main() {
 	flag.BoolVar(&announceSolutions, "a", false, "announce solution digits")
 	flag.BoolVar(&nakedPairElimination, "N", false, "perform naked pair elimination")
 	flag.BoolVar(&hiddenPairElimination, "H", false, "perform hidden pair elimination")
-	flag.BoolVar(&hiddenTripletsElimination, "T", false, "perform hidden triples elimination")
+	flag.BoolVar(&hiddenTripletsElimination, "T", false, "perform hidden triplets elimination")
+	flag.BoolVar(&nakedTripletsElimination, "t", false, "perform naked triplets elimination")
 	flag.BoolVar(&pointingElimination, "P", false, "perform block pointing elimination")
 	flag.BoolVar(&xwingElimination, "X", false, "perform Xwing elimination")
 	flag.BoolVar(&solveByBackTracking, "B", false, "solve by backtracking, if necessary")
@@ -131,6 +133,12 @@ func main() {
 		if hiddenTripletsElimination {
 			m = (&bd).HiddenTripletsEliminate(announceSolutions)
 			fmt.Printf("Eliminated %d candidates via hidden triples\n", m)
+			n += m
+		}
+
+		if nakedTripletsElimination {
+			m = (&bd).NakedTripletsEliminate(announceSolutions)
+			fmt.Printf("Eliminated %d candidates via naked triples\n", m)
 			n += m
 		}
 
