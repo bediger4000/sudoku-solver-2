@@ -14,16 +14,166 @@ func (bd *Board) NakedTripletsEliminate(announce bool) int {
 
 func (bd *Board) RowNakedTriplets(announce bool) int {
 	totalEliminated := 0
+	for rowNo := 0; rowNo < 9; rowNo++ {
+		var house [9]*Cell
+		idx := 0
+		for c := 0; c < 9; c++ {
+			house[idx] = &((*bd)[rowNo][c])
+			idx++
+		}
+		totalEliminated += findNakedTriplets(bd, "row", rowNo, house, announce)
+	}
 	return totalEliminated
+}
+
+func findNakedTriplets(bd *Board, phrase string, houseNo int, house [9]*Cell, announce bool) int {
+	candidatesEliminated := 0
+	var valueCount, possibleCount [10]int
+	cellsPossible := make(map[int][]*Cell)
+	for i, cell := range house {
+		possibleCount[i] = len(cell.Possible)
+		for _, v := range cell.Possible {
+			valueCount[v]++
+			cellsPossible[v] = append(cellsPossible[v], cell)
+		}
+	}
+	// valueCount, indexed by possible value
+	// possibleCount, indexed by cell index
+	// cellsPossible, keyed by possible value
+
+	var p2or3 []int
+	for v := 1; v < 10; v++ {
+		if valueCount[v] == 2 || valueCount[v] == 3 {
+			p2or3 = append(p2or3, v)
+		}
+	}
+	ln := len(p2or3)
+	if ln < 3 {
+		if announce {
+			fmt.Printf("no possible naked triplets in %s %d\n", phrase, houseNo)
+		}
+		return 0
+	}
+
+	// p2or3 holds all values in this house (row, col or block) that
+	// appear either 2 or 3 times.
+
+	/* ---- */
+	// At least 3 possible values with 2 or 3 appearances each.
+	// find out if some combination of 3 values appears in only 3 cells
+	for i := 0; i < ln; i++ {
+		p := p2or3[i]
+		c1 := cellsPossible[p]
+		if len(c1) < 2 || len(c1) > 3 {
+			// value p2or3[i] appears less than 2 or more than
+			// 3 times in this house
+			continue
+		}
+		for j := i + 1; j < ln; j++ {
+			q := p2or3[j]
+			c2 := cellsPossible[q]
+			if len(c2) < 2 || len(c2) > 3 {
+				continue
+			}
+			for k := j + 1; k < ln; k++ {
+				r := p2or3[k]
+				c3 := cellsPossible[r]
+				if len(c3) < 2 || len(c3) > 3 {
+					continue
+				}
+				// All 3 values p,q,r appear in 3 slices of cells, c1, c2, c3.
+				// Are they 3 different cells?
+				allCells := make(map[int]*Cell)
+				for _, cls := range [][]*Cell{c1, c2, c3} {
+					for _, cell := range cls {
+						hash := 10*cell.Row + cell.Col
+						allCells[hash] = cell
+					}
+				}
+				if len(allCells) != 3 {
+					// not 3 different cells
+					break // for-k loop
+				}
+				var tripletCells []*Cell
+				for _, cell := range allCells {
+					tripletCells = append(tripletCells, cell)
+				}
+				orderCells(tripletCells) // just for convenience
+
+				// Are there other possible values in any of the 3 cells?
+				otherPossibleValues := false
+				for _, cell := range tripletCells {
+					for _, v := range cell.Possible {
+						if v != p && v != q && v != r {
+							otherPossibleValues = true
+							break
+						}
+					}
+				}
+
+				if otherPossibleValues {
+					// not naked triplet
+					break // for-k loop
+				}
+
+				// p, q, r are the only values that appear in the
+				// possible values of cells in tripletCells
+				// Eliminate other appearannces of p,q,r in other
+				// cells in house
+				for _, cell := range house {
+					hash := 10*cell.Row + cell.Col
+					if allCells[hash] != nil {
+						// cell is one of the triplet cells
+						continue
+					}
+					// we can splice out p, q, r from cell.Possible
+					for _, x := range []int{p, q, r} {
+						if m := bd.SpliceOut(cell.Row, cell.Col, x); m > 0 {
+							if announce {
+								fmt.Printf("\teliminated %d at <%d,%d>\n", x, cell.Row, cell.Col)
+							}
+							candidatesEliminated++
+						}
+					}
+				}
+			}
+		}
+	}
+	/* ---- */
+
+	return candidatesEliminated
 }
 
 func (bd *Board) ColNakedTriplets(announce bool) int {
 	totalEliminated := 0
+	for colNo := 0; colNo < 9; colNo++ {
+		var house [9]*Cell
+		idx := 0
+		for r := 0; r < 9; r++ {
+			house[idx] = &((*bd)[r][colNo])
+			idx++
+		}
+		totalEliminated += findNakedTriplets(bd, "column", colNo, house, announce)
+	}
 	return totalEliminated
 }
 
 func (bd *Board) BlockNakedTriplets(announce bool) int {
 	totalEliminated := 0
+	for blockNo := 0; blockNo < 9; blockNo++ {
+		var house [9]*Cell
+		idx := 0
+		for r := 0; r < 9; r++ {
+			for c := 0; c < 9; c++ {
+				if (*bd)[r][c].Block != blockNo {
+					continue
+				}
+				house[idx] = &((*bd)[r][c])
+				idx++
+			}
+		}
+		totalEliminated += findNakedTriplets(bd, "block", blockNo, house, announce)
+	}
 	return totalEliminated
 }
 
@@ -162,7 +312,6 @@ func elimNonTriples(bd *Board, c1, c2, c3 []*Cell, p, q, r int, announce bool) i
 	// splice out all possible values except the
 	// values in p2or3, from the cells in tripletCells
 	for _, cell := range tripletCells {
-		fmt.Printf("splicing out from <%d,%d>\n", cell.Row, cell.Col)
 		for idx := 0; idx < len(cell.Possible); {
 			v := cell.Possible[idx]
 			if v == p ||
