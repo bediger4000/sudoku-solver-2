@@ -29,7 +29,7 @@ func main() {
 	flag.BoolVar(&printPossible, "c", false, "on incomplete solution, print digit possibilities")
 	flag.BoolVar(&printPossiblePS, "C", false, "print digit possibilities in PostScript output")
 	flag.BoolVar(&printIntermediate, "i", false, "print intermediate solved boards")
-	flag.BoolVar(&printAsInput, "t", false, "print final board in input format")
+	flag.BoolVar(&printAsInput, "q", false, "print final board in input format")
 	flag.BoolVar(&announceSolutions, "a", false, "announce solution digits")
 	flag.BoolVar(&nakedPairElimination, "N", false, "perform naked pair elimination")
 	flag.BoolVar(&hiddenPairElimination, "H", false, "perform hidden pair elimination")
