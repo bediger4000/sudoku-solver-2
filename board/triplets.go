@@ -2,6 +2,7 @@ package board
 
 import (
 	"fmt"
+	"sort"
 )
 
 func (bd *Board) NakedTripletsEliminate(announce bool) int {
@@ -49,43 +50,8 @@ func (bd *Board) RowHiddenTriplets(announce bool) int {
 				cellsPossible[v] = append(cellsPossible[v], &(bdRow[c]))
 			}
 		}
-		var p2or3 []int
-		for i := 1; i < 10; i++ {
-			if count[i] == 2 || count[i] == 3 {
-				p2or3 = append(p2or3, i)
-			}
-		}
-		ln := len(p2or3)
-		if ln < 3 {
-			if announce {
-				fmt.Printf("row %d does not have possible triplets\n", rowNo)
-			}
-			continue // rowNo loop
-		}
-		// At least 3 possible values with 2 or 3 appearances each.
-		// find out if any 3 values in p2or3 appear in only 3 cells
-		for i := 0; i < ln; i++ {
-			c1 := cellsPossible[p2or3[i]]
-			if len(c1) < 2 || len(c1) > 3 {
-				continue
-			}
-			for j := i + 1; j < ln; j++ {
-				c2 := cellsPossible[p2or3[j]]
-				if len(c2) < 2 || len(c2) > 3 {
-					continue
-				}
-				for k := j + 1; k < ln; k++ {
-					c3 := cellsPossible[p2or3[k]]
-					if len(c3) < 2 || len(c3) > 3 {
-						continue
-					}
-					// all 3 values in p2or3 appear in exactly 3 cells, c1, c2, c3
-					candidatesEliminated += elimNonTriples(bd, c1, c2, c3, p2or3[i], p2or3[j], p2or3[k], announce)
-				}
-			}
-		}
+		candidatesEliminated += findTriplets(bd, count, cellsPossible, rowNo, "row", announce)
 	}
-
 	return candidatesEliminated
 }
 
@@ -166,12 +132,10 @@ func elimNonTriples(bd *Board, c1, c2, c3 []*Cell, p, q, r int, announce bool) i
 	// p, q, r appear as possible values in 3 cells.
 	// Are those cells exactly 3 different cells?
 	allCells := make(map[int]*Cell)
-	var tripletCells []*Cell
 	for _, cls := range [][]*Cell{c1, c2, c3} {
 		for _, cell := range cls {
 			hash := 10*cell.Row + cell.Col
 			allCells[hash] = cell
-			tripletCells = append(tripletCells, cell)
 		}
 	}
 	if len(allCells) != 3 {
@@ -179,6 +143,12 @@ func elimNonTriples(bd *Board, c1, c2, c3 []*Cell, p, q, r int, announce bool) i
 	}
 
 	// p, q, r all appear in the correct 3 cells.
+
+	var tripletCells []*Cell
+	for _, cell := range allCells {
+		tripletCells = append(tripletCells, cell)
+	}
+	orderCells(tripletCells)
 
 	if announce {
 		fmt.Printf("triplet (%d,%d,%d) all found in cells <%d,%d>, <%d,%d>, <%d,%d>\n",
@@ -192,6 +162,7 @@ func elimNonTriples(bd *Board, c1, c2, c3 []*Cell, p, q, r int, announce bool) i
 	// splice out all possible values except the
 	// values in p2or3, from the cells in tripletCells
 	for _, cell := range tripletCells {
+		fmt.Printf("splicing out from <%d,%d>\n", cell.Row, cell.Col)
 		for idx := 0; idx < len(cell.Possible); {
 			v := cell.Possible[idx]
 			if v == p ||
@@ -234,4 +205,24 @@ func (bd *Board) BlockHiddenTriplets(announce bool) int {
 	}
 
 	return candidatesEliminated
+}
+
+type CellSlice []*Cell
+
+func (cs CellSlice) Len() int { return len(cs) }
+func (cs CellSlice) Less(i, j int) bool {
+	if cs[i].Row < cs[j].Row {
+		return true
+	}
+	if cs[i].Col < cs[j].Col {
+		return true
+	}
+	return false
+}
+func (cs CellSlice) Swap(i, j int) {
+	cs[i], cs[j] = cs[j], cs[i]
+}
+
+func orderCells(tripletCells []*Cell) {
+	sort.Sort(CellSlice(tripletCells))
 }
