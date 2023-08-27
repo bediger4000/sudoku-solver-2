@@ -28,109 +28,68 @@ func (bd *Board) RowNakedTriplets(announce bool) int {
 
 func findNakedTriplets(bd *Board, phrase string, houseNo int, house [9]*Cell, announce bool) int {
 	candidatesEliminated := 0
-	var valueCount, possibleCount [10]int
-	cellsPossible := make(map[int][]*Cell)
-	for i, cell := range house {
-		possibleCount[i] = len(cell.Possible)
-		for _, v := range cell.Possible {
-			valueCount[v]++
-			cellsPossible[v] = append(cellsPossible[v], cell)
-		}
-	}
-	// valueCount, indexed by possible value
-	// possibleCount, indexed by cell index
-	// cellsPossible, keyed by possible value
 
-	var p2or3 []int
-	for v := 1; v < 10; v++ {
-		if valueCount[v] == 2 || valueCount[v] == 3 {
-			p2or3 = append(p2or3, v)
-		}
-	}
-	ln := len(p2or3)
-	if ln < 3 {
-		if announce {
-			fmt.Printf("no possible naked triplets in %s %d\n", phrase, houseNo)
-		}
-		return 0
-	}
-
-	// p2or3 holds all values in this house (row, col or block) that
-	// appear either 2 or 3 times.
-
-	/* ---- */
-	// At least 3 possible values with 2 or 3 appearances each.
-	// find out if some combination of 3 values appears in only 3 cells
-	for i := 0; i < ln; i++ {
-		p := p2or3[i]
-		c1 := cellsPossible[p]
-		if len(c1) < 2 || len(c1) > 3 {
-			// value p2or3[i] appears less than 2 or more than
-			// 3 times in this house
+	for i := 0; i < 9; i++ {
+		c1 := house[i]
+		if len(c1.Possible) < 2 || len(c1.Possible) > 3 {
 			continue
 		}
-		for j := i + 1; j < ln; j++ {
-			q := p2or3[j]
-			c2 := cellsPossible[q]
-			if len(c2) < 2 || len(c2) > 3 {
+		for j := i + 1; j < 9; j++ {
+			c2 := house[j]
+			if len(c2.Possible) < 2 || len(c2.Possible) > 3 {
 				continue
 			}
-			for k := j + 1; k < ln; k++ {
-				r := p2or3[k]
-				c3 := cellsPossible[r]
-				if len(c3) < 2 || len(c3) > 3 {
+			for k := j + 1; k < 9; k++ {
+				c3 := house[k]
+				if len(c3.Possible) < 2 || len(c3.Possible) > 3 {
 					continue
 				}
-				// All 3 values p,q,r appear in 3 slices of cells, c1, c2, c3.
-				// Are they 3 different cells?
-				allCells := make(map[int]*Cell)
-				for _, cls := range [][]*Cell{c1, c2, c3} {
-					for _, cell := range cls {
-						hash := 10*cell.Row + cell.Col
-						allCells[hash] = cell
-					}
-				}
-				if len(allCells) != 3 {
-					// not 3 different cells
-					break // for-k loop
-				}
-				var tripletCells []*Cell
-				for _, cell := range allCells {
-					tripletCells = append(tripletCells, cell)
-				}
-				orderCells(tripletCells) // just for convenience
 
-				// Are there other possible values in any of the 3 cells?
-				otherPossibleValues := false
-				for _, cell := range tripletCells {
-					for _, v := range cell.Possible {
-						if v != p && v != q && v != r {
-							otherPossibleValues = true
-							break
-						}
-					}
+				// cells c1, c2, c3 all have 2 or 3 possible values
+				// Are those possible values taken together only 3 values?
+				values := append(c1.Possible, c2.Possible...)
+				values = append(values, c3.Possible...)
+				appearances := make(map[int]int)
+				for _, v := range values {
+					appearances[v]++
 				}
 
-				if otherPossibleValues {
-					// not naked triplet
-					break // for-k loop
+				if len(appearances) != 3 {
+					break // for k loop
 				}
 
-				// p, q, r are the only values that appear in the
-				// possible values of cells in tripletCells
-				// Eliminate other appearannces of p,q,r in other
-				// cells in house
+				var tripletValues [3]int
+				idx := 0
+				for v, _ := range appearances {
+					tripletValues[idx] = v
+					idx++
+				}
+
+				sort.Ints(tripletValues[:])
+
+				p, q, r := tripletValues[0], tripletValues[1], tripletValues[2]
+
+				if announce {
+					fmt.Printf("%s %d, found naked triplet (%d,%d,%d) in <%d,%d>, <%d,%d>, <%d,%d>\n",
+						phrase, houseNo,
+						p, q, r,
+						c1.Row, c1.Col,
+						c2.Row, c2.Col,
+						c3.Row, c3.Col,
+					)
+				}
+
 				for _, cell := range house {
-					hash := 10*cell.Row + cell.Col
-					if allCells[hash] != nil {
-						// cell is one of the triplet cells
+					if cell == c1 || cell == c2 || cell == c3 {
 						continue
 					}
-					// we can splice out p, q, r from cell.Possible
-					for _, x := range []int{p, q, r} {
-						if m := bd.SpliceOut(cell.Row, cell.Col, x); m > 0 {
+					for _, v := range cell.Possible {
+						if v == p || v == q || v == r {
+							continue
+						}
+						if x := bd.SpliceOut(cell.Row, cell.Col, v); x > 0 {
 							if announce {
-								fmt.Printf("\teliminated %d at <%d,%d>\n", x, cell.Row, cell.Col)
+								fmt.Printf("\telminated %d from <%d,%d>\n", v, cell.Row, cell.Col)
 							}
 							candidatesEliminated++
 						}
@@ -139,7 +98,6 @@ func findNakedTriplets(bd *Board, phrase string, houseNo int, house [9]*Cell, an
 			}
 		}
 	}
-	/* ---- */
 
 	return candidatesEliminated
 }
