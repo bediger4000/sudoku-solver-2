@@ -31,30 +31,45 @@ func findNakedTriplets(bd *Board, phrase string, houseNo int, house [9]*Cell, an
 
 	for i := 0; i < 9; i++ {
 		c1 := house[i]
-		if len(c1.Possible) < 2 || len(c1.Possible) > 3 {
+		if c1.Solved || len(c1.Possible) < 2 || len(c1.Possible) > 3 {
 			continue
 		}
 		for j := i + 1; j < 9; j++ {
 			c2 := house[j]
-			if len(c2.Possible) < 2 || len(c2.Possible) > 3 {
+			if c2.Solved || len(c2.Possible) < 2 || len(c2.Possible) > 3 {
 				continue
 			}
 			for k := j + 1; k < 9; k++ {
 				c3 := house[k]
-				if len(c3.Possible) < 2 || len(c3.Possible) > 3 {
+				if c3.Solved || len(c3.Possible) < 2 || len(c3.Possible) > 3 {
 					continue
 				}
 
-				// cells c1, c2, c3 all have 2 or 3 possible values
+				// unsolved cells c1, c2, c3 all have 2 or 3 possible values
 				// Are those possible values taken together only 3 values?
-				values := append(c1.Possible, c2.Possible...)
-				values = append(values, c3.Possible...)
 				appearances := make(map[int]int)
-				for _, v := range values {
+				for _, v := range c1.Possible {
+					appearances[v]++
+				}
+				for _, v := range c2.Possible {
+					appearances[v]++
+				}
+				for _, v := range c3.Possible {
 					appearances[v]++
 				}
 
 				if len(appearances) != 3 {
+					break // for k loop
+				}
+
+				// Only 3 possible values are keys in appearances
+				notEnough := false
+				for _, count := range appearances {
+					if count < 2 || count > 3 {
+						notEnough = true
+					}
+				}
+				if notEnough {
 					break // for k loop
 				}
 
@@ -80,7 +95,7 @@ func findNakedTriplets(bd *Board, phrase string, houseNo int, house [9]*Cell, an
 				}
 
 				for _, cell := range house {
-					if cell == c1 || cell == c2 || cell == c3 {
+					if cell.Solved || cell == c1 || cell == c2 || cell == c3 {
 						continue
 					}
 					for _, v := range cell.Possible {
