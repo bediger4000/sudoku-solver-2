@@ -99,7 +99,7 @@ func findNakedTriplets(bd *Board, phrase string, houseNo int, house [9]*Cell, an
 						continue
 					}
 					for _, v := range cell.Possible {
-						if v == p || v == q || v == r {
+						if v != p && v != q && v != r {
 							continue
 						}
 						if x := bd.SpliceOut(cell.Row, cell.Col, v); x > 0 {
