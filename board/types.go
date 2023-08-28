@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"unicode"
 )
 
 // Sudoku board
@@ -88,6 +89,18 @@ func (bd Board) Print(out io.Writer) {
 	}
 }
 
+func (bd Board) Details(out io.Writer) {
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			fmt.Fprintf(out, "<%d,%d>, block %d\n", bd[i][j].Row, bd[i][j].Col, bd[i][j].Block)
+			fmt.Fprintf(out, "Solved %v\n", bd[i][j].Solved)
+			fmt.Fprintf(out, "Value %v\n", bd[i][j].Value)
+			fmt.Fprintf(out, "Possible %v\n", bd[i][j].Possible)
+		}
+		fmt.Fprintf(out, "\n")
+	}
+}
+
 func (bd Board) PrintAsInput(out io.Writer) {
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
@@ -155,4 +168,31 @@ func ReadBoard(in io.Reader) Board {
 		}
 	}
 	return bd
+}
+
+func NewBoardFromString(str string) (*Board, error) {
+	bd := New()
+
+	for idx, r := range str {
+		if !unicode.IsDigit(r) {
+			return nil, fmt.Errorf("character %d: %c not a digit 0-9", idx+1, r)
+		}
+
+		n := r - '0'
+		if n < 0 || n > 9 {
+			return nil, fmt.Errorf("character %d: %c not a digit 0-9", idx+1, r)
+		}
+
+		if n == 0 {
+			continue
+		}
+
+		x := idx / 9
+		y := idx % 9
+
+		bd[x][y].Value = int(n)
+		bd[x][y].Solved = true
+	}
+
+	return &bd, nil
 }
