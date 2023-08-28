@@ -94,9 +94,9 @@ func (bd *Board) Valid() bool {
 	return true
 }
 
-func (bd *Board) ValidAndComplete() (bool, bool) {
-	complete := true
-	valid := true
+func (bd *Board) ValidAndComplete() (valid bool, complete bool) {
+	complete = true
+	valid = true
 	for rowNo := 0; rowNo < 9; rowNo++ {
 		digitCounts := [10]int{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 		sum := 0
