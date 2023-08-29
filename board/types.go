@@ -190,9 +190,85 @@ func NewBoardFromString(str string) (*Board, error) {
 		x := idx / 9
 		y := idx % 9
 
-		bd[x][y].Value = int(n)
-		bd[x][y].Solved = true
+		bd.MarkSolved(x, y, int(n))
 	}
 
 	return &bd, nil
+}
+
+func Compare(bd1, bd2 *Board, verbose bool) bool {
+	identical := true
+	for rowNo := 0; rowNo < 9; rowNo++ {
+		for colNo := 0; colNo < 9; colNo++ {
+			c1 := ((*bd1)[rowNo][colNo])
+			c2 := ((*bd2)[rowNo][colNo])
+			if c1.Row != c2.Row {
+				if verbose {
+					fmt.Printf("%d,%d: board 1 row %d, board 2 row %d\n",
+						rowNo, colNo,
+						c1.Row, c2.Row,
+					)
+				}
+				identical = false
+			}
+			if c1.Col != c2.Col {
+				if verbose {
+					fmt.Printf("%d,%d: board 1 column %d, board 2 column %d\n",
+						rowNo, colNo,
+						c1.Col, c2.Col,
+					)
+				}
+				identical = false
+			}
+			if c1.Block != c2.Block {
+				if verbose {
+					fmt.Printf("%d,%d: board 1 block %d, board 2 block %d\n",
+						rowNo, colNo,
+						c1.Block, c2.Block,
+					)
+				}
+				identical = false
+			}
+			if c1.Solved != c2.Solved {
+				if verbose {
+					fmt.Printf("%d,%d: board 1 solved %v, board 2 solved %v\n",
+						rowNo, colNo,
+						c1.Solved, c2.Solved,
+					)
+				}
+				identical = false
+			}
+			if c1.Value != c2.Value {
+				if verbose {
+					fmt.Printf("%d,%d: board 1 solved value %d, board 2 solved value %d\n",
+						rowNo, colNo,
+						c1.Value, c2.Value,
+					)
+				}
+				identical = false
+			}
+			if len(c1.Possible) != len(c2.Possible) {
+				identical = false
+				if verbose {
+					fmt.Printf("board 1 possible: %v\n", c1.Possible)
+					fmt.Printf("board 2 possible: %v\n", c2.Possible)
+				}
+			} else {
+				for i := 0; i < len(c1.Possible); i++ {
+					if c1.Possible[i] != c2.Possible[i] {
+						identical = false
+						if verbose {
+							fmt.Printf("%d,%d: board 1 has possible values %v, board 2 has possible values %v\n",
+								rowNo, colNo,
+								c1.Possible, c2.Possible,
+							)
+							break
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return identical
 }
