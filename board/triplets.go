@@ -98,16 +98,22 @@ func findNakedTriplets(bd *Board, phrase string, houseNo int, house [9]*Cell, an
 					if cell.Solved || cell == c1 || cell == c2 || cell == c3 {
 						continue
 					}
-					for _, v := range cell.Possible {
+					for idx := 0; idx < len(cell.Possible); {
+						v := cell.Possible[idx]
 						if v != p && v != q && v != r {
+							idx++
 							continue
 						}
-						if x := bd.SpliceOut(cell.Row, cell.Col, v); x > 0 {
+						if spliced := bd.SpliceOut(cell.Row, cell.Col, v); spliced > 0 {
 							if announce {
-								fmt.Printf("\telminated %d from <%d,%d>\n", v, cell.Row, cell.Col)
+								fmt.Printf("\teliminated non-tripliet %d at <%d,%d>\n", v, cell.Row, cell.Col)
 							}
-							candidatesEliminated++
+							candidatesEliminated += spliced
+							// skip incrementing index: splicing out value cell.Possible[idx]
+							// means that the value of cell.Possible[idx] has changed.
+							continue
 						}
+						idx++
 					}
 				}
 			}
