@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"unicode"
 )
 
@@ -63,7 +62,7 @@ var positionByBlock = [2][9][9]int{
 }
 */
 
-func New() Board {
+func New() *Board {
 	var bd Board
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
@@ -73,10 +72,10 @@ func New() Board {
 			bd[i][j].Block = blockNumber[i][j]
 		}
 	}
-	return bd
+	return &bd
 }
 
-func (bd Board) Print(out io.Writer) {
+func (bd *Board) Print(out io.Writer) {
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
 			if bd[i][j].Solved {
@@ -89,7 +88,7 @@ func (bd Board) Print(out io.Writer) {
 	}
 }
 
-func (bd Board) Details(out io.Writer) {
+func (bd *Board) Details(out io.Writer) {
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
 			fmt.Fprintf(out, "<%d,%d>, block %d\n", bd[i][j].Row, bd[i][j].Col, bd[i][j].Block)
@@ -101,7 +100,7 @@ func (bd Board) Details(out io.Writer) {
 	}
 }
 
-func (bd Board) PrintAsInput(out io.Writer) {
+func (bd *Board) PrintAsInput(out io.Writer) {
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
 			if bd[i][j].Solved {
@@ -114,7 +113,7 @@ func (bd Board) PrintAsInput(out io.Writer) {
 	}
 }
 
-func ReadBoard(in io.Reader) Board {
+func ReadBoard(in io.Reader) (*Board, error) {
 	bd := New()
 	r := bufio.NewReader(in)
 	for row := 0; row < 9; {
@@ -122,11 +121,11 @@ func ReadBoard(in io.Reader) Board {
 		if err != nil {
 			if err == io.EOF {
 				if row != 9 {
-					log.Fatalf("Premature end-of-file at row %d\n", row)
+					return nil, fmt.Errorf("premature end-of-file at row %d\n", row)
 				}
 				break
 			}
-			log.Fatal(err)
+			return nil, err
 		}
 		if buf[0] == '#' {
 			continue
@@ -144,7 +143,7 @@ func ReadBoard(in io.Reader) Board {
 			}
 			if n < 0 || n > 10 {
 				// Will this ever happen?
-				log.Fatalf("Numbers must be less than 10, greater than zero: %d (%c)\n", n, c)
+				return nil, fmt.Errorf("numbers must be less than 10, greater than zero: %d (%c)\n", n, c)
 			}
 			if n != 0 {
 				bd.MarkSolved(row, col, n)
@@ -152,7 +151,7 @@ func ReadBoard(in io.Reader) Board {
 			col++
 		}
 		if col != 9 {
-			log.Fatalf("Row %d had %d cols\n", row+1, col)
+			return nil, fmt.Errorf("row %d had %d cols\n", row+1, col)
 		}
 		row++
 	}
@@ -167,7 +166,7 @@ func ReadBoard(in io.Reader) Board {
 			}
 		}
 	}
-	return bd
+	return bd, nil
 }
 
 func NewBoardFromString(str string) (*Board, error) {
@@ -193,7 +192,7 @@ func NewBoardFromString(str string) (*Board, error) {
 		bd.MarkSolved(x, y, int(n))
 	}
 
-	return &bd, nil
+	return bd, nil
 }
 
 func Compare(bd1, bd2 *Board, verbose bool) bool {

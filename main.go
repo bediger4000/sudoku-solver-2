@@ -52,7 +52,10 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-	bd := board.ReadBoard(fin)
+	bd, err := board.ReadBoard(fin)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if validateOnly {
 		if !bd.Valid() {
@@ -70,7 +73,7 @@ func main() {
 		if *phrase == "" {
 			*phrase = *postScriptFileName
 		}
-		(&bd).EmitPostScript(fout, *phrase, printPossiblePS)
+		bd.EmitPostScript(fout, *phrase, printPossiblePS)
 		return
 	}
 
@@ -100,11 +103,11 @@ func main() {
 		fmt.Printf("-- Iteration %d\n", count)
 		n = 0
 
-		m = (&bd).FindSingles(announceSolutions)
+		m = bd.FindSingles(announceSolutions)
 		fmt.Printf("Found %d single digits\n", m)
 		n += m
 
-		m = (&bd).FindIsolates(announceSolutions)
+		m = bd.FindIsolates(announceSolutions)
 		fmt.Printf("Found %d isolated digits\n", m)
 		n += m
 
@@ -119,49 +122,49 @@ func main() {
 		}
 
 		if nakedPairElimination {
-			m = (&bd).NakedPairEliminate(announceSolutions)
+			m = bd.NakedPairEliminate(announceSolutions)
 			fmt.Printf("Eliminated %d candidates via naked pairs\n", m)
 			n += m
 		}
 
 		if hiddenPairElimination {
-			m = (&bd).HiddenPairEliminate(announceSolutions)
+			m = bd.HiddenPairEliminate(announceSolutions)
 			fmt.Printf("Eliminated %d candidates via hidden pairs\n", m)
 			n += m
 		}
 
 		if hiddenTripletsElimination {
-			m = (&bd).HiddenTripletsEliminate(announceSolutions)
+			m = bd.HiddenTripletsEliminate(announceSolutions)
 			fmt.Printf("Eliminated %d candidates via hidden triples\n", m)
 			n += m
 		}
 
 		if nakedTripletsElimination {
-			m = (&bd).NakedTripletsEliminate(announceSolutions)
+			m = bd.NakedTripletsEliminate(announceSolutions)
 			fmt.Printf("Eliminated %d candidates via naked triples\n", m)
 			n += m
 		}
 
 		if n == 0 && pointingElimination {
-			m = (&bd).PointingElimination(announceSolutions)
+			m = bd.PointingElimination(announceSolutions)
 			fmt.Printf("Eliminated %d candidates via pointing\n", m)
 			n += m
 		}
 
 		if n == 0 && xwingElimination {
-			m = (&bd).XwingEliminate(announceSolutions)
+			m = bd.XwingEliminate(announceSolutions)
 			fmt.Printf("Eliminated %d candidates via xwing\n", m)
 			n += m
 		}
 
-		if !(&bd).Valid() {
+		if !bd.Valid() {
 			break
 		}
 	}
 
 	if (solveByBackTracking || backTrackingOnly) && !bd.Finished() {
 		fmt.Println("Solving via backtracking")
-		board.BackTrackSolution(&bd)
+		board.BackTrackSolution(bd)
 	}
 
 	if finalOutput && *postScriptFileName != "" {
@@ -169,7 +172,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		(&bd).EmitPostScript(fout, *postScriptFileName, printPossiblePS)
+		bd.EmitPostScript(fout, *postScriptFileName, printPossiblePS)
 		return
 	}
 
