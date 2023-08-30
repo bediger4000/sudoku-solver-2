@@ -43,16 +43,7 @@ func main() {
 	phrase := flag.String("y", "", "phrase to print in PostScript")
 	flag.Parse()
 
-	fin := os.Stdin
-	if flag.NArg() > 0 {
-		var err error
-		fin, err = os.Open(flag.Arg(0))
-		defer fin.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-	bd, err := board.ReadBoard(fin)
+	bd, err := board.FigureOutBoard()
 	if err != nil {
 		log.Fatal(err)
 	}
