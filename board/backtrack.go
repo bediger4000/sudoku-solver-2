@@ -58,7 +58,7 @@ func (bd *Board) printPly() {
 func BackTrackSolution(bd *Board) {
 	bd.printPly()
 	fmt.Println("===")
-	backTrackSolution(0, bd)
+	backTrackSolution(0, bd, printUniqueBoards)
 	fmt.Print("===")
 	if uniqueBoardCount > 0 {
 		fmt.Printf(" %d backtracking solutions\n", uniqueBoardCount)
@@ -67,16 +67,38 @@ func BackTrackSolution(bd *Board) {
 	fmt.Println()
 }
 
+var solutionsC chan *Board
+var sentSolution bool
+
+func channelSolvedBoard(bd *Board) {
+	if sentSolution {
+		return
+	}
+	sentSolution = true
+	solutionsC <- bd.Copy()
+	close(solutionsC)
+}
+
+func BackTrackSolved(bd *Board) *Board {
+	solutionsC = make(chan *Board, 1)
+	sentSolution = false
+	go backTrackSolution(0, bd, channelSolvedBoard)
+	solvedBoard := <-solutionsC
+	return solvedBoard
+}
+
 // backTrackSolution called recursively to find all valid boards.
 // It looks through all the squares on the board to find an unsolved
 // square, then does all the possibilities for that square. Since the
 // recursive call of backTrackSolution will find an unsolved square,
 // there's no need to do every unsolved square at this ply.
 // It can find the same board more than once.
-func backTrackSolution(ply int, bd *Board) {
-	if invalidBoardCount > 1 && invalidBoardCount%1000000 == 0 {
-		fmt.Printf("%d invalid boards found so far\n", invalidBoardCount)
-	}
+func backTrackSolution(ply int, bd *Board, foundBoardFn func(*Board)) {
+	/*
+		if invalidBoardCount > 1 && invalidBoardCount%1000000 == 0 {
+			fmt.Printf("%d invalid boards found so far\n", invalidBoardCount)
+		}
+	*/
 	for rowNo := 0; rowNo < 9; rowNo++ {
 		foundAnEmpty := false
 		for colNo := 0; colNo < 9; colNo++ {
@@ -128,12 +150,12 @@ func backTrackSolution(ply int, bd *Board) {
 				if valid, complete := bd.ValidAndComplete(); complete {
 					invalidBoardCount++
 					if valid {
-						printUniqueBoards(bd)
+						foundBoardFn(bd)
 						invalidBoardCount--
 					}
 				} else {
 					// it's incomplete, open squares remain, recurse
-					backTrackSolution(ply+1, bd)
+					backTrackSolution(ply+1, bd, foundBoardFn)
 				}
 
 				// reset all the erased possibilities
