@@ -71,6 +71,19 @@ func New() *Board {
 	return &bd
 }
 
+func Copy(bd *Board) *Board {
+	n := New()
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			copy(n[i][j].Possible, bd[i][j].Possible)
+			n[i][j].Possible = n[i][j].Possible[:len(bd[i][j].Possible)]
+			n[i][j].Solved = bd[i][j].Solved
+			n[i][j].Value = bd[i][j].Value
+		}
+	}
+	return n
+}
+
 func Compare(bd1, bd2 *Board, verbose bool) bool {
 	identical := true
 	for rowNo := 0; rowNo < 9; rowNo++ {
