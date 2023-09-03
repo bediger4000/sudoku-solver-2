@@ -67,22 +67,25 @@ func BackTrackSolution(bd *Board) {
 	fmt.Println()
 }
 
-var solutionsC chan *Board
-var sentSolution bool
+type sendSolutions struct {
+	solutionsC   chan *Board
+	sentSolution bool
+}
 
-func channelSolvedBoard(bd *Board) {
-	if sentSolution {
+func (ss *sendSolutions) channelSolvedBoard(bd *Board) {
+	if ss.sentSolution {
 		return
 	}
-	sentSolution = true
-	solutionsC <- bd.Copy()
-	close(solutionsC)
+	ss.sentSolution = true
+	ss.solutionsC <- bd.Copy()
+	close(ss.solutionsC)
 }
 
 func BackTrackSolved(bd *Board) *Board {
-	solutionsC = make(chan *Board, 1)
-	sentSolution = false
-	go backTrackSolution(0, bd, channelSolvedBoard)
+	var ss sendSolutions
+	solutionsC := make(chan *Board, 1)
+	ss.solutionsC = solutionsC
+	go backTrackSolution(0, bd, ss.channelSolvedBoard)
 	solvedBoard := <-solutionsC
 	return solvedBoard
 }
