@@ -71,7 +71,7 @@ func New() *Board {
 	return &bd
 }
 
-func Copy(bd *Board) *Board {
+func (bd *Board) Copy() *Board {
 	n := New()
 	for i := 0; i < 9; i++ {
 		for j := 0; j < 9; j++ {
@@ -82,6 +82,27 @@ func Copy(bd *Board) *Board {
 		}
 	}
 	return n
+}
+
+func CompareSolutions(bd1, bd2 *Board, verbose bool) bool {
+	identical := true
+	for rowNo := 0; rowNo < 9; rowNo++ {
+		for colNo := 0; colNo < 9; colNo++ {
+			if bd1[rowNo][colNo].Solved != bd1[rowNo][colNo].Solved {
+				if verbose {
+					fmt.Printf("<%d,%d>, one board not solved\n", rowNo, colNo)
+				}
+				identical = false
+			} else if bd1[rowNo][colNo].Value != bd1[rowNo][colNo].Value {
+				fmt.Printf("<%d,%d>, different values \n",
+					rowNo, colNo,
+					bd1[rowNo][colNo].Value, bd1[rowNo][colNo].Value,
+				)
+				identical = false
+			}
+		}
+	}
+	return identical
 }
 
 func Compare(bd1, bd2 *Board, verbose bool) bool {
