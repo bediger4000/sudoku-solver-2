@@ -1,5 +1,7 @@
 package main
 
+// Bulk SDM format solver
+
 import (
 	"bufio"
 	"flag"
@@ -20,13 +22,25 @@ func main() {
 	var xwingElimination bool
 	var verifyAndCompare bool
 
-	flag.BoolVar(&announceSolutions, "a", false, "announce solution digits")
-	flag.BoolVar(&nakedPairElimination, "N", false, "perform naked pair elimination")
-	flag.BoolVar(&hiddenPairElimination, "H", false, "perform hidden pair elimination")
-	flag.BoolVar(&hiddenTripletsElimination, "T", false, "perform hidden triplets elimination")
-	flag.BoolVar(&nakedTripletsElimination, "t", false, "perform naked triplets elimination")
-	flag.BoolVar(&pointingElimination, "P", false, "perform block pointing elimination")
-	flag.BoolVar(&xwingElimination, "X", false, "perform Xwing elimination")
+	// Count number of candidates eliminated
+	var (
+		nakedPairEliminated      int
+		hiddenPairEliminated     int
+		hiddenTripletsEliminated int
+		nakedTripletsEliminated  int
+		pointingEliminated       int
+		xwingEliminated          int
+	)
+
+	flag.Usage = usage
+
+	flag.BoolVar(&announceSolutions, "a", false, "announce solution details")
+	flag.BoolVar(&nakedPairElimination, "N", true, "perform naked pair elimination")
+	flag.BoolVar(&hiddenPairElimination, "H", true, "perform hidden pair elimination")
+	flag.BoolVar(&hiddenTripletsElimination, "T", true, "perform hidden triplets elimination")
+	flag.BoolVar(&nakedTripletsElimination, "t", true, "perform naked triplets elimination")
+	flag.BoolVar(&pointingElimination, "P", true, "perform block pointing elimination")
+	flag.BoolVar(&xwingElimination, "X", true, "perform Xwing elimination")
 	flag.BoolVar(&verifyAndCompare, "v", false, "verify and compare solutions")
 
 	flag.Parse()
@@ -80,41 +94,59 @@ func main() {
 			}
 			m += n
 
-			n = bd.NakedPairEliminate(announceSolutions)
-			if announceSolutions {
-				fmt.Printf("eliminated %d candidates via naked pair\n", n)
+			if nakedPairElimination {
+				n = bd.NakedPairEliminate(announceSolutions)
+				if announceSolutions {
+					fmt.Printf("eliminated %d candidates via naked pair\n", n)
+				}
+				nakedPairEliminated += n
+				m += n
 			}
-			m += n
 
-			n = bd.HiddenPairEliminate(announceSolutions)
-			if announceSolutions {
-				fmt.Printf("eliminated %d candidates via hidden pair\n", n)
+			if hiddenPairElimination {
+				n = bd.HiddenPairEliminate(announceSolutions)
+				if announceSolutions {
+					fmt.Printf("eliminated %d candidates via hidden pair\n", n)
+				}
+				hiddenPairEliminated += n
+				m += n
 			}
-			m += n
 
-			n = bd.HiddenTripletsEliminate(announceSolutions)
-			if announceSolutions {
-				fmt.Printf("eliminated %d candidates via hidden triplets\n", n)
+			if hiddenTripletsElimination {
+				n = bd.HiddenTripletsEliminate(announceSolutions)
+				if announceSolutions {
+					fmt.Printf("eliminated %d candidates via hidden triplets\n", n)
+				}
+				hiddenTripletsEliminated += n
+				m += n
 			}
-			m += n
 
-			n = bd.NakedTripletsEliminate(announceSolutions)
-			if announceSolutions {
-				fmt.Printf("eliminated %d candidates via naked triplets\n", n)
+			if nakedTripletsElimination {
+				n = bd.NakedTripletsEliminate(announceSolutions)
+				if announceSolutions {
+					fmt.Printf("eliminated %d candidates via naked triplets\n", n)
+				}
+				nakedTripletsEliminated += n
+				m += n
 			}
-			m += n
 
-			n = bd.PointingElimination(announceSolutions)
-			if announceSolutions {
-				fmt.Printf("eliminated %d candidates via pointing\n", n)
+			if pointingElimination {
+				n = bd.PointingElimination(announceSolutions)
+				if announceSolutions {
+					fmt.Printf("eliminated %d candidates via pointing\n", n)
+				}
+				pointingEliminated += n
+				m += n
 			}
-			m += n
 
-			n = bd.XwingEliminate(announceSolutions)
-			if announceSolutions {
-				fmt.Printf("eliminated %d candidates via XWing\n", n)
+			if xwingElimination {
+				n = bd.XwingEliminate(announceSolutions)
+				if announceSolutions {
+					fmt.Printf("eliminated %d candidates via XWing\n", n)
+				}
+				xwingEliminated += n
+				m += n
 			}
-			m += n
 
 			valid, complete := bd.ValidAndComplete()
 
@@ -155,9 +187,25 @@ func main() {
 	fmt.Printf("%d input puzzles, %d solved (%d didn't verify), %d stumped\n",
 		lineCounter, solvedCount, mismatchCount, stumpedCount,
 	)
+	fmt.Printf("Candidates eliminated with:\nNaked pair %d\nHidden pair %d\nHidden triplets %d\nNaked triplets %d\nPointing %d\nXwing %d\n",
+		nakedPairEliminated,
+		hiddenPairEliminated,
+		hiddenTripletsEliminated,
+		nakedTripletsEliminated,
+		pointingEliminated,
+		xwingEliminated,
+	)
 
 	if err := scanner.Err(); err != nil {
 		log.Fatalf("problem line %d: %v", lineCounter, err)
 	}
 
+}
+
+func usage() {
+	fmt.Fprintf(flag.CommandLine.Output(), "%s - a bulk SDM format Sudoku solver\n", os.Args[0])
+	fmt.Fprintf(flag.CommandLine.Output(), "%s [flags...] filename\n", os.Args[0])
+	fmt.Fprintf(flag.CommandLine.Output(), "filename names a file of SDM-format, 81-character sudoku puzzles, one per line\n")
+	flag.PrintDefaults()
+	fmt.Fprintf(flag.CommandLine.Output(), "to turn off technique selection: -P=false for example\n")
 }
