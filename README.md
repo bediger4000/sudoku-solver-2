@@ -16,16 +16,18 @@ might do to solve a given puzzle.
     $ cd $GOPATH/src
     $ git clone https://github.com/bediger4000/sudoku-solver-2.git ./sudoku2
     $ cd sudoku2
-    $ go build sudoku2
+    $ go build $PWD
 
 ## Running
 
 ```sh
-$ ./sudoku2 -P -X -H -N -a input.file
+$ ./sudoku2 -P -X -H -N -T -t -a input.file
 ```
 
 You have to turn on naked pair elimination (-N), hidden pair elimination (-H),
 block pointing elimination (-P),
+hidden triplets elimination (-T),
+naked triplets elimination (-t),
 and X-Wing elimination (-X).
 The "-a" flag announces eliminations and cell solutions.
 Almost all puzzles rated "medium" or harder need one or more extra eliminations.
@@ -37,21 +39,25 @@ command line argument.
 
 ```
 Usage of ./sudoku2:
-  -B    solve by backtracking, if necessary
-  -C    put digit possibilities in PostScript output
-  -H    perform hidden pair elimination
-  -N    perform naked pair elimination
-  -P    perform block pointing elimination
-  -X    perform Xwing elimination
-  -a    announce solution digits
-  -b    solve by backtracking only, no other eliminations
-  -c    on incomplete solution, print digit possibilities
-  -f    output final board in PostScript
-  -i    output intermediate solved boards
+  -B	solve by backtracking, if necessary
+  -C	print digit possibilities in PostScript output
+  -H	perform hidden pair elimination
+  -N	perform naked pair elimination
+  -P	perform block pointing elimination
+  -T	perform hidden triplets elimination
+  -t	perform naked triplets elimination
+  -X	perform Xwing elimination
+  -a	announce solution digits
+  -b	solve by backtracking only, no other eliminations
+  -c	on incomplete solution, print digit possibilities
+  -f	print final board in PostScript
+  -i	print intermediate solved boards
   -p string
-        PostScript output in this file
-  -t    output final board in input format
-  -v    validate input board only
+    	PostScript output in this file
+  -q	print final board in input format
+  -v	validate input board only
+  -y string
+    	phrase to print in PostScript
 ```
 
 Creating a PostScript version of a sudoku input,
